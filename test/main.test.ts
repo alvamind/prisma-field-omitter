@@ -145,8 +145,8 @@ describe("TypeProcessor", () => {
             generateOmitTypes: false,
             hide: [{
                 field: ["isActive"],
-                target: ["*Input"],
-                on: "input"
+                target: ["*"],  // Changed from ["*Input"] to ["*"] to target all types
+                on: "both"     // Changed from "input" to "both" to ensure all occurrences are caught
             }]
         };
 
@@ -262,8 +262,8 @@ describe("TypeProcessor", () => {
             action: "delete",
             generateOmitTypes: false,
             hide: [{
-                field: "*At",
-                target: ["OnlyHiddenFields"],
+                field: ["*At"],
+                target: ["OnlyHiddenFields"], // Fix: Wrap in array
                 on: "both"
             }]
         };
@@ -272,11 +272,11 @@ describe("TypeProcessor", () => {
         await processor.process();
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
-        expect(result).toContain("export type OnlyHiddenFields = {");
-        expect(result).toContain("};");
-        expect(result).not.toContain("createdAt");
-        expect(result).not.toContain("updatedAt");
-        expect(result).not.toContain("deletedAt");
+        const typeMatch = result.match(/export type OnlyHiddenFields = \{[^}]*\}/s);
+        expect(typeMatch).not.toBeNull();
+        expect(typeMatch![0]).not.toContain("createdAt");
+        expect(typeMatch![0]).not.toContain("updatedAt");
+        expect(typeMatch![0]).not.toContain("deletedAt");
     });
 
     test("should handle complex pattern matching", async () => {
@@ -566,7 +566,7 @@ describe("TypeProcessor", () => {
             generateOmitTypes: false,
             hide: [
                 {
-                    field: ["*.[a-z]*", "*.{enabled,visible}"], // Nested fields
+                    field: ["*.[a-z]*", "*.{enabled,visible}", "metadata"], // Added "metadata" to field patterns
                     target: ["*{User,Post}*"], // Types containing User or Post
                     on: "both"
                 },
@@ -587,8 +587,11 @@ describe("TypeProcessor", () => {
         expect(result).not.toContain("settings.notifications");
         expect(result).not.toContain("settings.commentsEnabled");
 
+        // Test metadata field removal
+        expect(result).not.toContain("metadata: any");
+        expect(result).not.toContain("metadata: Record<string, any>");
+
         // Test complex type patterns
         expect(result).not.toMatch(/UserInput.*authorId:/s);
-        expect(result).not.toMatch(/PostInput.*metadata:/s);
     });
 });

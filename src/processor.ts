@@ -62,15 +62,19 @@ export class TypeProcessor {
             const fieldName = prop.getName();
             if (this.shouldHideField(fieldName, typeName)) {
                 propertiesToModify.push(prop);
+                return; // Skip processing nested types if field should be hidden
             }
 
             // Process nested types
-            prop.getChildrenOfKind(SyntaxKind.TypeLiteral)
-                .forEach(child => {
-                    if (Node.isTypeLiteral(child)) {
-                        this.processProperties(Array.from(child.getMembers() as PropertySignature[]), typeName);
-                    }
-                });
+            const typeNode = prop.getTypeNode();
+            if (typeNode) {
+                typeNode.getChildrenOfKind(SyntaxKind.TypeLiteral)
+                    .forEach(child => {
+                        if (Node.isTypeLiteral(child)) {
+                            this.processProperties(Array.from(child.getMembers() as PropertySignature[]), typeName);
+                        }
+                    });
+            }
         });
 
         propertiesToModify.forEach(prop => this.hideProperty(prop));
