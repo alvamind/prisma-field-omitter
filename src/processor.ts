@@ -26,30 +26,30 @@ export class TypeProcessor {
                     return line;
                 }
 
-                // Check if we should process this line based on current type
+                // Check if this line is inside a type we want to process
                 const shouldProcess = this.config.hide.some(rule => {
-                    if (rule.target === 'all') return true;
-                    if (!rule.target) return true;
-                    const targets = Array.isArray(rule.target) ? rule.target : [rule.target];
-                    return targets.some(t => {
-                        const g = new Glob(t);
-                        return g.match(currentType);
-                    });
+                    const targets = rule.target === 'all' ? ['*'] :
+                        Array.isArray(rule.target) ? rule.target : [rule.target || '*'];
+
+                    return targets.some(target => new Glob(target).match(currentType));
                 });
 
                 if (!shouldProcess) return line;
 
-                // Simple field matching
-                for (const rule of this.config.hide) {
+                // Check if this line has a field we want to process
+                const fieldMatch = line.match(/^\s*(\w+)\??:/);
+                if (!fieldMatch) return line;
+
+                const fieldName = fieldMatch[1];
+                const shouldHideField = this.config.hide.some(rule => {
                     const fields = Array.isArray(rule.field) ? rule.field : [rule.field];
-                    for (const field of fields) {
-                        const fieldMatch = line.match(/^\s*(\w+)\??:/);
-                        if (fieldMatch && this.matchPattern(fieldMatch[1], field)) {
-                            return this.config.action === 'delete' ? '' :
-                                '  // ' + line.trim();
-                        }
-                    }
+                    return fields.some(pattern => new Glob(pattern).match(fieldName));
+                });
+
+                if (shouldHideField) {
+                    return this.config.action === 'delete' ? '' : '  // ' + line.trim();
                 }
+
                 return line;
             });
 
