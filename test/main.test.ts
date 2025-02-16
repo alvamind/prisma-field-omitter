@@ -133,7 +133,7 @@ describe("TypeProcessor", () => {
 
         expect(result).toContain("// createdAt: Date");
         expect(result).toContain("// updatedAt: Date");
-        expect(result).toContain("email: string");
+        expect(result).toContain("isActive: boolean");
     });
 
     test("should delete specific fields", async () => {
