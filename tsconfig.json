@@ -5,8 +5,8 @@
       "ESNext",
       "DOM"
     ],
-    "target": "esnext",
-    "module": "esnext",
+    "target": "ES2020", // Changed from ESNext to ensure compatibility
+    "module": "ES2022", // Changed from ESNext to support import.meta
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
@@ -23,14 +23,13 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false,
-    // Additional options
+    // Added for Bun compatibility
     "types": [
       "bun-types"
-    ],
-    "esModuleInterop": true,
-    "outDir": "dist"
+    ]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "test/**/*" // Added to include test files
   ]
 }

@@ -1,0 +1,594 @@
+import { expect, test, describe, beforeAll, afterAll } from "bun:test";
+import { TypeProcessor } from "../src/processor";
+import type { Config } from "../src/types";
+import { mkdirSync, rmSync } from "fs";
+import { join } from "path";
+
+const TEST_DIR = join(import.meta.dir, "tmp");
+const INPUT_DIR = join(TEST_DIR, "input");
+const OUTPUT_DIR = join(TEST_DIR, "output");
+
+// Extended sample types with more edge cases
+const sampleTypes = `
+export type User = {
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  email: string;
+  isActive: boolean;
+  metadata: Record<string, any>;
+};
+
+export type CreateUserInput = {
+  email: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isActive: boolean;
+  type: 'admin' | 'user';
+};
+
+export type UpdateUserInput = {
+  email?: string;
+  updatedAt: Date;
+  isActive?: boolean;
+};
+
+export interface ComplexNestedInput {
+  create?: UserCreateInput & { extraData: any };
+  update?: UserUpdateInput;
+  upsert?: UserUpsertInput;
+  connect?: UserWhereUniqueInput[];
+  disconnect?: boolean;
+  delete?: boolean;
+  include?: {
+    profile?: boolean;
+    posts?: boolean;
+  };
+}
+
+// Edge case: Empty type
+export type EmptyType = {
+};
+
+// Edge case: Type with only hidden fields
+export type OnlyHiddenFields = {
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date;
+};
+
+// Edge case: Nested structure
+export interface DeepNestedStructure {
+  level1: {
+    level2: {
+      level3: {
+        createdAt: Date;
+        data: string;
+      }
+    }
+  }
+}
+
+export type ComplexUserInput = {
+    firstName: string;
+    lastName: string;
+    phoneNumber: string;
+    emailVerified: boolean;
+    role: 'ADMIN' | 'USER';
+    metadata: any;
+    settings: {
+        notifications: boolean;
+        theme: string;
+    };
+};
+
+export type ComplexPostInput = {
+    title: string;
+    content: string;
+    draft: boolean;
+    publishedAt: Date;
+    authorId: string;
+    metadata: any;
+    settings: {
+        visibility: 'public' | 'private';
+        commentsEnabled: boolean;
+    };
+};
+`;
+
+describe("TypeProcessor", () => {
+    beforeAll(() => {
+        // Create test directories
+        mkdirSync(INPUT_DIR, { recursive: true });
+        mkdirSync(OUTPUT_DIR, { recursive: true });
+
+        // Create test input files
+        Bun.write(join(INPUT_DIR, "types.input.ts"), sampleTypes);
+        Bun.write(join(INPUT_DIR, "types2.input.ts"), sampleTypes);
+    });
+
+    afterAll(() => {
+        // Cleanup test directories
+        rmSync(TEST_DIR, { recursive: true, force: true });
+    });
+
+    test("should comment out timestamp fields", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "comment",
+            generateOmitTypes: false,
+            hide: [{
+                field: "*At",
+                target: "all",
+                on: "input"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).toContain("// createdAt: Date");
+        expect(result).toContain("// updatedAt: Date");
+        expect(result).toContain("email: string");
+    });
+
+    test("should delete specific fields", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [{
+                field: ["isActive"],
+                target: ["*Input"],
+                on: "input"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).not.toContain("isActive: boolean");
+        expect(result).toContain("email: string");
+    });
+
+    test("should handle nested input types", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [{
+                field: ["disconnect", "delete"],
+                target: ["*NestedInput"]
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).not.toContain("disconnect?: boolean");
+        expect(result).not.toContain("delete?: boolean");
+        expect(result).toContain("create?: UserCreateInput");
+    });
+
+    test("should delete original files when configured", async () => {
+        const testFile = join(INPUT_DIR, "delete-me.input.ts");
+        await Bun.write(testFile, sampleTypes);
+
+        const config: Config = {
+            originFile: testFile,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: true,
+            action: "comment",
+            generateOmitTypes: false,
+            hide: [{
+                field: "*At",
+                target: "all"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+
+        expect(await Bun.file(testFile).exists()).toBe(false);
+        expect(await Bun.file(join(OUTPUT_DIR, "delete-me.input.ts")).exists()).toBe(true);
+    });
+
+    test("should handle multiple glob patterns", async () => {
+        const config: Config = {
+            originFile: [
+                `${INPUT_DIR}/*.input.ts`,
+                `${INPUT_DIR}/*.output.ts`
+            ],
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "comment",
+            generateOmitTypes: false,
+            hide: [{
+                field: "*At",
+                target: "all"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+
+        const results = await Promise.all([
+            Bun.file(join(OUTPUT_DIR, "types.input.ts")).exists(),
+            Bun.file(join(OUTPUT_DIR, "types2.input.ts")).exists()
+        ]);
+
+        expect(results.every(Boolean)).toBe(true);
+    });
+
+    test("should handle complex nested structures", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "comment",
+            generateOmitTypes: false,
+            hide: [{
+                field: "*At",
+                target: ["DeepNestedStructure"],
+                on: "both"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).toContain("// createdAt: Date");
+        expect(result).toContain("data: string");
+    });
+
+    test("should handle type with only hidden fields", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [{
+                field: "*At",
+                target: ["OnlyHiddenFields"],
+                on: "both"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).toContain("export type OnlyHiddenFields = {");
+        expect(result).toContain("};");
+        expect(result).not.toContain("createdAt");
+        expect(result).not.toContain("updatedAt");
+        expect(result).not.toContain("deletedAt");
+    });
+
+    test("should handle complex pattern matching", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "comment",
+            generateOmitTypes: false,
+            hide: [{
+                field: ["*At", "is*", "*Id"],
+                target: ["*Input", "*Output"],
+                on: "both"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).toContain("// createdAt: Date");
+        expect(result).toContain("// isActive: boolean");
+        expect(result).toContain("email: string");
+    });
+
+    test("should handle empty types", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [{
+                field: "*",
+                target: ["EmptyType"],
+                on: "both"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).toContain("export type EmptyType = {");
+        expect(result).toContain("};");
+    });
+
+    test("should handle union types in field values", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "comment",
+            generateOmitTypes: false,
+            hide: [{
+                field: "type",
+                target: ["CreateUserInput"],
+                on: "input"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).toContain("// type: 'admin' | 'user'");
+    });
+
+    test("should handle interface declarations", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [{
+                field: ["connect", "disconnect", "delete"],
+                target: ["ComplexNestedInput"],
+                on: "both"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).not.toContain("connect?:");
+        expect(result).not.toContain("disconnect?:");
+        expect(result).not.toContain("delete?:");
+        expect(result).toContain("create?:");
+        expect(result).toContain("update?:");
+    });
+
+    test("should handle array fields in interface declarations", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "comment",
+            generateOmitTypes: false,
+            hide: [{
+                field: "connect",
+                target: ["ComplexNestedInput"],
+                on: "both"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        expect(result).toContain("// connect?: UserWhereUniqueInput[]");
+    });
+
+    test("should handle multiple array patterns simultaneously", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [
+                {
+                    field: ["*Id", "*At"],
+                    target: ["*Input"],
+                    on: "input"
+                },
+                {
+                    field: ["metadata", "settings"],
+                    target: ["ComplexUserInput", "ComplexPostInput"],
+                    on: "both"
+                },
+                {
+                    field: ["firstName", "lastName", "phoneNumber"],
+                    target: ["ComplexUserInput"],
+                    on: "input"
+                },
+                {
+                    field: ["draft", "content"],
+                    target: ["ComplexPostInput"],
+                    on: "input"
+                }
+            ]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        // Check fields are removed from ComplexUserInput
+        expect(result).not.toContain("firstName: string");
+        expect(result).not.toContain("lastName: string");
+        expect(result).not.toContain("phoneNumber: string");
+        expect(result).not.toContain("metadata: any");
+        expect(result).not.toContain("settings: {");
+        expect(result).toContain("emailVerified: boolean");
+        expect(result).toContain("role: 'ADMIN' | 'USER'");
+
+        // Check fields are removed from ComplexPostInput
+        expect(result).not.toContain("draft: boolean");
+        expect(result).not.toContain("content: string");
+        expect(result).not.toContain("publishedAt: Date");
+        expect(result).not.toContain("authorId: string");
+        expect(result).not.toContain("metadata: any");
+        expect(result).not.toContain("settings: {");
+        expect(result).toContain("title: string");
+    });
+
+    test("should handle overlapping field patterns", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "comment",
+            generateOmitTypes: false,
+            hide: [
+                {
+                    field: "*Id",
+                    target: ["ComplexPostInput"],
+                    on: "input"
+                },
+                {
+                    field: ["author*", "*Id"],
+                    target: ["*Input"],
+                    on: "both"
+                }
+            ]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        // Check that both patterns work and don't interfere with each other
+        expect(result).toContain("// authorId: string");
+        expect(result).not.toContain("authorId: string");
+    });
+
+    test("should handle multiple glob patterns in field arrays", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [{
+                field: [
+                    "*At",      // matches createdAt, updatedAt, deletedAt
+                    "is*",      // matches isActive
+                    "*Id",      // matches authorId, userId
+                    "*Meta*",   // matches metadata, metaInfo
+                    "*.?*",     // matches nested properties like settings.theme
+                    "*[A-Z]*",  // matches fields with capital letters
+                ],
+                target: [
+                    "*Input",     // matches CreateUserInput, UpdateUserInput
+                    "*Nested*",   // matches nested type definitions
+                    "*Complex*",  // matches complex type definitions
+                    "Deep*",      // matches deep nested structures
+                ],
+                on: "both"
+            }]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        // Test field pattern matching
+        expect(result).not.toContain("createdAt: Date");
+        expect(result).not.toContain("updatedAt: Date");
+        expect(result).not.toContain("deletedAt: Date");
+        expect(result).not.toContain("isActive: boolean");
+        expect(result).not.toContain("authorId: string");
+        expect(result).not.toContain("metadata: any");
+        expect(result).not.toContain("settings.theme");
+
+        // Test target pattern matching
+        expect(result).not.toMatch(/export (type|interface) \w*Input/);
+        expect(result).not.toMatch(/export (type|interface) \w*Nested\w*/);
+        expect(result).not.toMatch(/export (type|interface) \w*Complex\w*/);
+        expect(result).not.toMatch(/export (type|interface) Deep\w*/);
+    });
+
+    test("should handle glob pattern combinations with negation", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [
+                {
+                    field: ["!*At", "*"],  // Hide everything except *At fields
+                    target: ["*User*"],
+                    on: "input"
+                },
+                {
+                    field: ["*At"],        // Then hide *At fields
+                    target: ["!*Complex*", "*"], // In all except Complex* types
+                    on: "both"
+                }
+            ]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        // In User types, everything except timestamps should be hidden
+        expect(result).toContain("createdAt: Date");
+        expect(result).toContain("updatedAt: Date");
+        expect(result).not.toContain("email: string");
+        expect(result).not.toContain("isActive: boolean");
+
+        // In Complex types, timestamps should remain
+        expect(result).toMatch(/ComplexUserInput.*createdAt: Date/s);
+        expect(result).toMatch(/ComplexPostInput.*updatedAt: Date/s);
+    });
+
+    test("should handle complex glob pattern combinations", async () => {
+        const config: Config = {
+            originFile: `${INPUT_DIR}/*.input.ts`,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [
+                {
+                    field: ["*.[a-z]*", "*.{enabled,visible}"], // Nested fields
+                    target: ["*{User,Post}*"], // Types containing User or Post
+                    on: "both"
+                },
+                {
+                    field: ["[A-Z]*", "[a-z]*Id"], // Capital starting or ending with Id
+                    target: ["!(Test)*Input"], // All *Input except Test*Input
+                    on: "input"
+                }
+            ]
+        };
+
+        const processor = new TypeProcessor(config);
+        await processor.process();
+        const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
+
+        // Test nested field patterns
+        expect(result).not.toContain("settings.theme");
+        expect(result).not.toContain("settings.notifications");
+        expect(result).not.toContain("settings.commentsEnabled");
+
+        // Test complex type patterns
+        expect(result).not.toMatch(/UserInput.*authorId:/s);
+        expect(result).not.toMatch(/PostInput.*metadata:/s);
+    });
+});

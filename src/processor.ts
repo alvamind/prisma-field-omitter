@@ -6,7 +6,6 @@ import { unlinkSync } from "fs";
 
 export class TypeProcessor {
     private config: Config;
-    private context!: ts.TransformationContext; // Use definite assignment assertion
 
     constructor(config: Config) {
         this.config = config;
@@ -24,18 +23,16 @@ export class TypeProcessor {
                 true
             );
 
-            const { transformed, hasChanges } = this.transformNodes(sourceFile);
+            const result = ts.transform(sourceFile, [(context) => {
+                return (node: ts.SourceFile) => ts.visitEachChild(node, child => this.visitNode(child), context);
+            }]);
 
-            if (hasChanges) {
+            if (result.transformed.length > 0) {
                 const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
-                const result = printer.printNode(
-                    ts.EmitHint.Unspecified,
-                    transformed,
-                    sourceFile
-                );
+                const output = printer.printFile(result.transformed[0] as ts.SourceFile);
 
-                const outputPath = this.getOutputPath(file);
-                await Bun.write(outputPath, result);
+                const outputPath = join(this.config.outputDir, basename(file));
+                await Bun.write(outputPath, output);
 
                 if (this.config.deleteOriginFile) {
                     unlinkSync(file);
@@ -44,50 +41,69 @@ export class TypeProcessor {
         }
     }
 
-    private transformNodes(sourceFile: ts.SourceFile) {
-        let hasChanges = false;
+    private visitNode(node: ts.Node): ts.Node {
+        if (!ts.isTypeAliasDeclaration(node) && !ts.isInterfaceDeclaration(node)) {
+            return node;
+        }
 
-        const visitor = (node: ts.Node): ts.Node => {
-            if (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) {
-                if (this.shouldHideNode(node)) {
-                    hasChanges = true;
-                    if (this.config.action === 'comment') {
-                        return ts.addSyntheticLeadingComment(
-                            node,
-                            ts.SyntaxKind.SingleLineCommentTrivia,
-                            ` ${node.getText()}`,
-                            true
-                        );
-                    }
-                    return ts.factory.createEmptyStatement();
-                }
-            }
-            return ts.visitEachChild(node, visitor, this.context);
-        };
+        const nodeName = node.name.text;
+        const shouldProcess = this.config.hide.some(rule => {
+            const targets = rule.target === 'all' ? ['.*'] :
+                Array.isArray(rule.target) ? rule.target : [rule.target || '.*'];
 
-        const result = ts.transform(sourceFile, [
-            (context): ts.Transformer<ts.SourceFile> => {
-                this.context = context;
-                return (file) => ts.visitNode(file, visitor) as ts.SourceFile;
-            }
-        ]);
+            return targets.some(target => {
+                const pattern = new Glob(target);
+                return pattern.match(nodeName);
+            });
+        });
 
-        return { transformed: result.transformed[0], hasChanges };
+        if (!shouldProcess) return node;
+
+        if (this.config.action === 'delete') {
+            return this.processNodeForDeletion(node);
+        }
+
+        // Comment action
+        return ts.addSyntheticLeadingComment(
+            node,
+            ts.SyntaxKind.SingleLineCommentTrivia,
+            ` ${node.getText()}`,
+            true
+        );
     }
 
-    private shouldHideNode(node: ts.TypeAliasDeclaration | ts.InterfaceDeclaration): boolean {
-        const text = node.getText();
-        return this.config.hide.some(rule => {
-            const fields = Array.isArray(rule.field) ? rule.field : [rule.field];
-            const targets = rule.target === 'all' ? ['.*'] : rule.target || ['.*'];
+    private processNodeForDeletion(node: ts.TypeAliasDeclaration | ts.InterfaceDeclaration): ts.Node {
+        const fieldsToHide = new Set(
+            this.config.hide
+                .flatMap(rule => Array.isArray(rule.field) ? rule.field : [rule.field])
+                .filter(field => field !== '*')
+        );
 
-            return fields.some(field => {
-                const fieldPattern = new RegExp(field.replace('*', '.*'));
-                return targets.some(target => {
-                    const targetPattern = new RegExp(target.replace('*', '.*'));
-                    return fieldPattern.test(text) && targetPattern.test(text);
-                });
+        if (ts.isTypeAliasDeclaration(node) && ts.isTypeLiteralNode(node.type)) {
+            const members = node.type.members.filter(member => {
+                if (ts.isPropertySignature(member) && member.name) {
+                    const name = member.name.getText();
+                    return !this.shouldHideField(name, fieldsToHide);
+                }
+                return true;
             });
+
+            return ts.factory.updateTypeAliasDeclaration(
+                node,
+                node.modifiers,
+                node.name,
+                node.typeParameters,
+                ts.factory.createTypeLiteralNode(members)
+            );
+        }
+
+        return node;
+    }
+
+    private shouldHideField(fieldName: string, patterns: Set<string>): boolean {
+        return Array.from(patterns).some(pattern => {
+            const glob = new Glob(pattern);
+            return glob.match(fieldName);
         });
     }
 
@@ -97,19 +113,12 @@ export class TypeProcessor {
             : [this.config.originFile];
 
         const files = new Set<string>();
-
         for (const pattern of patterns) {
             const glob = new Glob(pattern);
-            for await (const file of glob.scan(".")) {
+            for await (const file of glob.scan({ absolute: true })) {
                 files.add(file);
             }
         }
-
         return Array.from(files);
-    }
-
-    private getOutputPath(inputPath: string): string {
-        const fileName = basename(inputPath);
-        return join(this.config.outputDir, fileName);
     }
 }
