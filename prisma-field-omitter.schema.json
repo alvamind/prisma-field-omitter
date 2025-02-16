@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "originFile": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Glob pattern matching input TypeScript files to process"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of glob patterns matching input TypeScript files"
+        }
+      ]
+    },
+    "outputDir": {
+      "type": "string",
+      "description": "Directory where processed files will be written"
+    },
+    "deleteOriginFile": {
+      "type": "boolean",
+      "description": "If set to true, will delete the original input file after processing. Use with caution.",
+      "default": false
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "comment",
+        "delete"
+      ],
+      "description": "Specifies how to handle hidden fields - either comment them out with // or remove them completely",
+      "default": "comment"
+    },
+    "generateOmitTypes": {
+      "type": "boolean",
+      "description": "When true, generates TypeScript types that omit the hidden fields from the original types",
+      "default": false
+    },
+    "generatedOmitTypesOutputPath": {
+      "type": "string",
+      "description": "File path where the generated TypeScript types that omit hidden fields will be written"
+    },
+    "hide": {
+      "type": "array",
+      "description": "Array of configurations specifying which fields to hide and where to hide them",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "A single field name or pattern (e.g. '*At' matches createdAt, updatedAt)"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Array of field names or patterns to hide"
+              }
+            ],
+            "description": "Specifies which field(s) should be hidden - can be exact names or glob patterns"
+          },
+          "target": {
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "all"
+                ],
+                "description": "Apply to all possible targets"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Array of glob patterns matching type names where fields should be hidden"
+              }
+            ],
+            "description": "Specifies which Prisma types the hiding should be applied to"
+          },
+          "on": {
+            "type": "string",
+            "enum": [
+              "input",
+              "output",
+              "both"
+            ],
+            "description": "Whether to hide fields on input types, output types, or both"
+          }
+        },
+        "required": [
+          "field"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "originFile",
+    "outputDir",
+    "hide"
+  ],
+  "additionalProperties": false
+}
