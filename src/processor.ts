@@ -50,11 +50,16 @@ export class TypeProcessor {
         const toModify = properties.filter(prop =>
             !prop.wasForgotten() &&
             Node.isPropertySignature(prop) &&
-            (this.shouldHideField(prop.getName(), typeName) || this.hasHiddenNestedFields(prop, typeName))
+            this.shouldProcessProperty(prop, typeName)
         );
 
         toModify.forEach(prop => {
             if (prop.wasForgotten()) return;
+
+            // Process nested properties first
+            this.processNestedProperties(prop, typeName);
+
+            // Then modify or remove the parent property
             const text = prop.getText();
             this.config.action === 'delete'
                 ? prop.remove()
@@ -62,13 +67,57 @@ export class TypeProcessor {
         });
     }
 
+    private shouldProcessProperty(prop: PropertySignature, typeName: string): boolean {
+        return this.shouldHideField(prop.getName(), typeName) ||
+            this.hasHiddenNestedFields(prop, typeName);
+    }
+
+    private processNestedProperties(prop: PropertySignature, typeName: string) {
+        const typeNode = prop.getTypeNode();
+        if (!typeNode) return;
+
+        if (Node.isTypeLiteral(typeNode)) {
+            const nestedProps = typeNode.getProperties();
+            this.processProperties(nestedProps as PropertySignature[], typeName);
+        } else if (Node.isIntersectionTypeNode(typeNode) || Node.isUnionTypeNode(typeNode)) {
+            typeNode.getTypeNodes().forEach(node => {
+                if (Node.isTypeLiteral(node)) {
+                    const nestedProps = node.getProperties();
+                    this.processProperties(nestedProps as PropertySignature[], typeName);
+                }
+            });
+        }
+    }
+
     private hasHiddenNestedFields(prop: PropertySignature, typeName: string): boolean {
         const typeNode = prop.getTypeNode();
-        if (!typeNode || !Node.isTypeLiteral(typeNode)) return false;
+        if (!typeNode) return false;
 
-        return typeNode.getProperties().some(nested =>
-            this.shouldHideField(nested.getName(), typeName)
-        );
+        if (Node.isTypeLiteral(typeNode)) {
+            return this.checkNestedTypeNode(typeNode, typeName);
+        } else if (Node.isIntersectionTypeNode(typeNode) || Node.isUnionTypeNode(typeNode)) {
+            return typeNode.getTypeNodes().some(node =>
+                Node.isTypeLiteral(node) && this.checkNestedTypeNode(node, typeName)
+            );
+        }
+        return false;
+    }
+
+    private checkNestedTypeNode(typeNode: Node, typeName: string): boolean {
+        if (!Node.isTypeLiteral(typeNode)) return false;
+
+        return typeNode.getProperties().some(nested => {
+            if (!Node.isPropertySignature(nested)) return false;
+
+            const shouldHide = this.shouldHideField(nested.getName(), typeName);
+            if (shouldHide) return true;
+
+            const nestedType = nested.getTypeNode();
+            if (nestedType && Node.isTypeLiteral(nestedType)) {
+                return this.checkNestedTypeNode(nestedType, typeName);
+            }
+            return false;
+        });
     }
 
     private matchesPattern(value: string, patterns: string[]): boolean {
