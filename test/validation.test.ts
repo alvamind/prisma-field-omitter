@@ -72,8 +72,8 @@ describe("ConfigValidator", () => {
         const config: Partial<Config> = {
             originFile: "test/*.ts",
             outputDir: "output",
+            // @ts-expect-error
             hide: [{
-                field: "*At",  // Add the required field property
                 target: "all",
                 on: "invalid" as "input" | "output" | "both"
             }]
@@ -81,7 +81,19 @@ describe("ConfigValidator", () => {
 
         const errors = validationService.validateConfig(config as Config);
         expect(errors).toContain("Hide rule #1: Missing required field field");
-        expect(errors).toContain(`Hide rule #1: Invalid 'on' value. Must be ${schema.properties.hide.items.properties.on.enum.join(', ')}`);
+
+        const configWithInvalidOn: Config = {
+            originFile: "test/*.ts",
+            outputDir: "output",
+            hide: [{
+                field: "*At",
+                target: "all",
+                on: "invalid" as "input" | "output" | "both"
+            }]
+        };
+
+        const errorsWithInvalidOn = validationService.validateConfig(configWithInvalidOn);
+        expect(errorsWithInvalidOn).toContain("Hide rule #1: Invalid 'on' value. Must be input, output, both");
     });
 
     test("should validate action field according to schema", () => {
