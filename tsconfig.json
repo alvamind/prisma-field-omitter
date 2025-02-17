@@ -5,8 +5,8 @@
       "ESNext",
       "DOM"
     ],
-    "target": "ES2020", // Changed from ESNext to ensure compatibility
-    "module": "ES2022", // Changed from ESNext to support import.meta
+    "target": "esnext", // Changed from ES2020 to ensure compatibility
+    "module": "esnext", // Changed from ES2022 to support import.meta
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
@@ -26,7 +26,9 @@
     // Added for Bun compatibility
     "types": [
       "bun-types"
-    ]
+    ],
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
   "include": [
     "src/**/*",

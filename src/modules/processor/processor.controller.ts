@@ -4,15 +4,18 @@ import { Node, TypeNode, InterfaceDeclaration, PropertySignature } from "ts-morp
 import { processorService } from './processor.service';
 import { progressService } from '../progress/progress.service';
 import { statsService, type ProcessingStats } from '../stats/stats.service';
+import { validationService } from '../validation/validation.service';
 import type { Config } from '../../types';
 
 export const processorController = Alvamind({ name: 'processor.controller' })
     .use(processorService)
     .use(progressService)
     .use(statsService)
+    .use(validationService)
     .derive(({ processorService: { createProject, matchesPattern, getTargetPatterns, processProperties, shouldProcessProperty, getInputFiles },
         progressService: { create },
-        statsService: { createStats } }) => {
+        statsService: { createStats },
+        validationService }) => {
         const processFile = async (file: string, config: Config, patternCache: Map<string, boolean>, stats: ProcessingStats) => {
             const project = createProject();
             const sourceFile = project.addSourceFileAtPath(file);
@@ -55,6 +58,12 @@ export const processorController = Alvamind({ name: 'processor.controller' })
 
         return {
             process: async (config: Config) => {
+                // Validate config before processing
+                const validationErrors = validationService.validateConfig(config);
+                if (validationErrors.length > 0) {
+                    throw new Error('Invalid configuration:\n' + validationErrors.join('\n'));
+                }
+
                 const patternCache = new Map<string, boolean>();
                 const stats = createStats();
                 const files = await getInputFiles(

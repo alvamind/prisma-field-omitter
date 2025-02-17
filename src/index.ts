@@ -1,6 +1,7 @@
 import Alvamind from 'alvamind';
 import { processorController } from './modules/processor/processor.controller';
 import type { Config, ProcessingOptions } from './types';
+import { run } from "./cli";
 
 const app = Alvamind({ name: 'prisma-field-omitter' })
     .use(processorController)
@@ -28,8 +29,19 @@ async function readConfig(configPath: string): Promise<Config> {
 }
 
 const args = process.argv.slice(2);
-app.run({
-    configPath: args[0] || "prisma-field-omitter.config.json",
-    parallel: parseInt(process.env.PARALLEL || String(navigator.hardwareConcurrency)),
-    verbose: process.env.VERBOSE === "true"
-}).catch(console.error);
+const configIndex = args.indexOf('--config');
+
+if (configIndex === -1 || !args[configIndex + 1]) {
+    console.error('Error: --config option is required');
+    process.exit(1);
+}
+
+const configPath = args[configIndex + 1];
+
+run({
+    configPath,
+    verbose: args.includes('--verbose')
+}).catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+});
