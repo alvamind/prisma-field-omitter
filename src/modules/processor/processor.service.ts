@@ -2,6 +2,7 @@ import Alvamind from 'alvamind';
 import { Project, Node, PropertySignature } from "ts-morph";
 import { Glob } from "bun";
 import type { Config } from '../../types';
+import { existsSync } from 'fs';
 
 
 
@@ -71,8 +72,15 @@ export const processorService = Alvamind({ name: 'processor.service' })
             const fileArrays = await Promise.all(
                 patterns.map(async pattern => {
                     const results: string[] = [];
+                    // Check if the pattern is a direct file path
+                    if (existsSync(pattern)) {
+                        results.push(pattern);
+                    }
+                    // Process glob pattern even if it's a valid path to include more matches
                     for await (const file of new Glob(pattern).scan({ absolute: true })) {
-                        results.push(file);
+                        if (!results.includes(file)) {
+                            results.push(file);
+                        }
                     }
                     return results;
                 })

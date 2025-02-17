@@ -6,7 +6,26 @@ import { run } from "./cli";
 
 Alvamind({ name: 'prisma-field-omitter' })
     .use(processorController)
-    .derive(({ processorController }) => ({
+    .decorate('configService', {
+        readConfig: async (configPath: string): Promise<Config> => {
+            if (!configPath) {
+                throw new Error('Config path is required');
+            }
+            const file = Bun.file(configPath);
+            if (!await file.exists()) {
+                throw new Error(`Config file not found: ${configPath}`);
+            }
+            const config = await file.json() as Config;
+
+            // Ensure outputDir exists
+            if (!existsSync(config.outputDir)) {
+                mkdirSync(config.outputDir, { recursive: true });
+            }
+
+            return config;
+        }
+    })
+    .derive(({ processorController, configService: { readConfig } }) => ({
         run: async (options: ProcessingOptions) => {
             try {
                 console.log('Starting prisma-field-omitter...');
@@ -23,24 +42,6 @@ Alvamind({ name: 'prisma-field-omitter' })
             }
         }
     }));
-
-async function readConfig(configPath: string): Promise<Config> {
-    if (!configPath) {
-        throw new Error('Config path is required');
-    }
-    const file = Bun.file(configPath);
-    if (!await file.exists()) {
-        throw new Error(`Config file not found: ${configPath}`);
-    }
-    const config = await file.json() as Config;
-
-    // Ensure outputDir exists
-    if (!existsSync(config.outputDir)) {
-        mkdirSync(config.outputDir, { recursive: true });
-    }
-
-    return config;
-}
 
 if (import.meta.main) {
     const args = process.argv.slice(2);

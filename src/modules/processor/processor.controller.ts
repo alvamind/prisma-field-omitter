@@ -25,12 +25,15 @@ export const processorController = Alvamind({ name: 'processor.controller' })
             const declarations = [...sourceFile.getTypeAliases(), ...sourceFile.getInterfaces()];
 
             let modified = false;
-            declarations.forEach(decl => {
+            for (const decl of declarations) {
                 const name = decl.getName();
-                if (!matchesPattern(name, getTargetPatterns(config), patternCache)) return;
+                const targetPatterns = getTargetPatterns(config);
+
+                // Process if the declaration matches any target pattern
+                if (!matchesPattern(name, targetPatterns, patternCache)) continue;
 
                 const node = 'getTypeNode' in decl ? decl.getTypeNode() : decl;
-                if (!node) return;
+                if (!node) continue;
 
                 let properties: PropertySignature[] = [];
                 if (Node.isTypeLiteral(node as TypeNode) || Node.isInterfaceDeclaration(node as InterfaceDeclaration)) {
@@ -45,12 +48,12 @@ export const processorController = Alvamind({ name: 'processor.controller' })
                     modified = true;
                     stats.typesModified++;
                     stats.fieldsModified += modifiedProperties.length;
-                }
 
-                processProperties(properties, name, config,
-                    (prop: PropertySignature, typeName: string) =>
-                        shouldProcessProperty(prop, typeName, config, patternCache));
-            });
+                    processProperties(properties, name, config,
+                        (prop: PropertySignature, typeName: string) =>
+                            shouldProcessProperty(prop, typeName, config, patternCache));
+                }
+            }
 
             if (modified) {
                 const outputPath = join(config.outputDir, basename(file));
@@ -59,25 +62,28 @@ export const processorController = Alvamind({ name: 'processor.controller' })
                 stats.filesProcessed++;
             }
 
-            if (config.deleteOriginFile) {
+            if (modified && config.deleteOriginFile) {
                 await Bun.write(file, ''); // Clear file before deletion
-                sourceFile.delete();
+                await sourceFile.delete();
             }
         };
 
         return {
             process: async (config: Config) => {
-                // Validate config before processing
                 const validationErrors = validateConfig(config);
                 if (validationErrors.length > 0) {
-                    throw new Error('Invalid configuration:\n' + validationErrors.join('\n'));
+                    throw new Error('Configuration validation failed:\n' + validationErrors.join('\n'));
                 }
 
                 const patternCache = new Map<string, boolean>();
                 const stats = createStats();
-                const files = await getInputFiles(
-                    Array.isArray(config.originFile) ? config.originFile : [config.originFile]
-                );
+                const inputPatterns = Array.isArray(config.originFile) ? config.originFile : [config.originFile];
+                const files = await getInputFiles(inputPatterns);
+
+                if (files.length === 0) {
+                    console.warn('No input files found matching the specified patterns');
+                    return;
+                }
 
                 const progress = create(files.length, 'Processing files');
 

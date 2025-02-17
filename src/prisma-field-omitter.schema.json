@@ -92,7 +92,8 @@
               "output",
               "both"
             ],
-            "description": "Whether to hide fields on input types, output types, or both"
+            "description": "Whether to hide fields on input types, output types, or both",
+            "default": "both"
           }
         },
         "required": [
