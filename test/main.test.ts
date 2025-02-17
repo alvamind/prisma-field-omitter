@@ -1,5 +1,5 @@
 import { expect, test, describe, beforeAll, afterAll } from "bun:test";
-import { TypeProcessor } from "../src/processor";
+import { processorController } from "../src/modules/processor/processor.controller";
 import type { Config } from "../src/types";
 import { mkdirSync, rmSync } from "fs";
 import { join } from "path";
@@ -126,8 +126,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
 
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
@@ -150,8 +149,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
 
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
@@ -172,8 +170,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
 
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
@@ -198,8 +195,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
 
         expect(await Bun.file(testFile).exists()).toBe(false);
         expect(await Bun.file(join(OUTPUT_DIR, "delete-me.input.ts")).exists()).toBe(true);
@@ -221,8 +217,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
 
         const results = await Promise.all([
             Bun.file(join(OUTPUT_DIR, "types.input.ts")).exists(),
@@ -246,8 +241,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         expect(result).toContain("// createdAt: Date");
@@ -268,8 +262,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         const typeMatch = result.match(/export type OnlyHiddenFields = \{[^}]*\}/s);
@@ -293,8 +286,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         expect(result).toContain("// createdAt: Date");
@@ -316,8 +308,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         expect(result).toContain("export type EmptyType = {");
@@ -338,8 +329,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         expect(result).toContain("// type: 'admin' | 'user'");
@@ -359,8 +349,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         expect(result).not.toContain("connect?:");
@@ -384,8 +373,7 @@ describe("TypeProcessor", () => {
             }]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         expect(result).toContain("// connect?: UserWhereUniqueInput[]");
@@ -422,8 +410,7 @@ describe("TypeProcessor", () => {
             ]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         // Check fields are removed from ComplexUserInput
@@ -466,8 +453,7 @@ describe("TypeProcessor", () => {
             ]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         // Check that both patterns work and don't interfere with each other
@@ -504,8 +490,7 @@ describe("TypeProcessor", () => {
             ]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         // Test field pattern matching for timestamps
@@ -545,8 +530,7 @@ describe("TypeProcessor", () => {
             ]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         // All fields in User types should be commented out
@@ -581,8 +565,7 @@ describe("TypeProcessor", () => {
             ]
         };
 
-        const processor = new TypeProcessor(config);
-        await processor.process();
+        await processorController.process(config);
         const result = await Bun.file(join(OUTPUT_DIR, "types.input.ts")).text();
 
         // Test nested field patterns
