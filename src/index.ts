@@ -1,4 +1,5 @@
 import Alvamind from 'alvamind';
+import { existsSync, mkdirSync } from 'fs';
 import { processorController } from './modules/processor/processor.controller';
 import type { Config, ProcessingOptions } from './types';
 import { run } from "./cli";
@@ -31,7 +32,14 @@ async function readConfig(configPath: string): Promise<Config> {
     if (!await file.exists()) {
         throw new Error(`Config file not found: ${configPath}`);
     }
-    return await file.json() as Config;
+    const config = await file.json() as Config;
+
+    // Ensure outputDir exists
+    if (!existsSync(config.outputDir)) {
+        mkdirSync(config.outputDir, { recursive: true });
+    }
+
+    return config;
 }
 
 if (import.meta.main) {

@@ -19,10 +19,12 @@ export const processorController = Alvamind({ name: 'processor.controller' })
         validationService: { validateConfig } }) => {
 
         const processFile = async (file: string, config: Config, patternCache: Map<string, boolean>, stats: ProcessingStats) => {
+            console.log(`Processing file: ${file}`);
             const project = createProject();
             const sourceFile = project.addSourceFileAtPath(file);
             const declarations = [...sourceFile.getTypeAliases(), ...sourceFile.getInterfaces()];
 
+            let modified = false;
             declarations.forEach(decl => {
                 const name = decl.getName();
                 if (!matchesPattern(name, getTargetPatterns(config), patternCache)) return;
@@ -40,6 +42,7 @@ export const processorController = Alvamind({ name: 'processor.controller' })
                     shouldProcessProperty(prop, name, config, patternCache));
 
                 if (modifiedProperties.length > 0) {
+                    modified = true;
                     stats.typesModified++;
                     stats.fieldsModified += modifiedProperties.length;
                 }
@@ -49,13 +52,17 @@ export const processorController = Alvamind({ name: 'processor.controller' })
                         shouldProcessProperty(prop, typeName, config, patternCache));
             });
 
-            await Bun.write(
-                join(config.outputDir, basename(file)),
-                sourceFile.getFullText()
-            );
+            if (modified) {
+                const outputPath = join(config.outputDir, basename(file));
+                console.log(`Writing output to: ${outputPath}`);
+                await Bun.write(outputPath, sourceFile.getFullText());
+                stats.filesProcessed++;
+            }
 
-            stats.filesProcessed++;
-            config.deleteOriginFile && sourceFile.delete();
+            if (config.deleteOriginFile) {
+                await Bun.write(file, ''); // Clear file before deletion
+                sourceFile.delete();
+            }
         };
 
         return {

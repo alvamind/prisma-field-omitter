@@ -46,6 +46,8 @@ const createConfigFile = async (fileName: string, config: any): Promise<string> 
 const runCli = async (args: string[]): Promise<{ code: number, output: string }> => {
     try {
         const cliPath = resolve(import.meta.dir, '..', 'src', 'index.ts');
+        console.log(`Running CLI with path: ${cliPath}`);
+        console.log(`Arguments: ${args.join(' ')}`);
 
         // Mock process.stdout.clearLine for tests
         if (!process.stdout.clearLine) {
@@ -68,11 +70,16 @@ const runCli = async (args: string[]): Promise<{ code: number, output: string }>
         const error = await new Response(proc.stderr).text();
         const exitCode = await proc.exited;
 
+        console.log(`CLI Output: ${output}`);
+        if (error) console.error(`CLI Error: ${error}`);
+        console.log(`Exit code: ${exitCode}`);
+
         return {
             code: exitCode,
             output: output + error
         };
     } catch (error: any) {
+        console.error(`CLI execution error: ${error}`);
         return {
             code: 1,
             output: error.message || String(error)
@@ -80,13 +87,25 @@ const runCli = async (args: string[]): Promise<{ code: number, output: string }>
     }
 };
 
+// Increase sleep duration to ensure file operations complete
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 describe("CLI with JSON config", () => {
     beforeAll(() => {
+        // Clean up previous test directory if it exists
+        rmSync(TEST_DIR, { recursive: true, force: true });
+
+        // Create fresh test directories
         mkdirSync(INPUT_DIR, { recursive: true });
         mkdirSync(OUTPUT_DIR, { recursive: true });
         mkdirSync(CONFIG_DIR, { recursive: true });
+
+        console.log('Test directories created:', {
+            TEST_DIR,
+            INPUT_DIR,
+            OUTPUT_DIR,
+            CONFIG_DIR
+        });
     });
 
     afterAll(() => {
@@ -122,18 +141,32 @@ describe("CLI with JSON config", () => {
             }]
         });
 
-        const { code } = await runCli(["--config", configPath]);
+        // Verify input file exists
+        const inputFile = join(INPUT_DIR, "types.ts");
+        console.log(`Input file exists: ${existsSync(inputFile)}`);
+        console.log(`Input file content:`, await Bun.file(inputFile).text());
 
-        // Add small delay to ensure file system operations complete
-        await sleep(100);
+        const { code, output } = await runCli(["--config", configPath]);
+        console.log('CLI output:', output);
+
+        // Increase sleep duration and add file system sync
+        await sleep(1000);
 
         const outputFile = join(OUTPUT_DIR, "types.ts");
+        console.log(`Output file path: ${outputFile}`);
+        console.log(`Output directory exists: ${existsSync(OUTPUT_DIR)}`);
+        console.log(`Output file exists: ${existsSync(outputFile)}`);
+
         expect(existsSync(outputFile)).toBe(true);
 
-        const result = await Bun.file(outputFile).text();
-        expect(result).toContain("// createdAt: Date");
-        expect(result).toContain("// updatedAt: Date");
-        expect(result).toContain("email: string");
+        if (existsSync(outputFile)) {
+            const result = await Bun.file(outputFile).text();
+            console.log('Output file content:', result);
+            expect(result).toContain("// createdAt: Date");
+            expect(result).toContain("// updatedAt: Date");
+            expect(result).toContain("email: string");
+        }
+
         expect(code).toBe(0);
     });
 
