@@ -1,4 +1,4 @@
-import Alvamind from 'alvamind';
+import Alvamind from 'alvamind/dist/index.js';
 import chalk from 'chalk';
 
 export const loggerService = Alvamind({ name: 'logger.service' })

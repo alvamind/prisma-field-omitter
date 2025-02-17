@@ -1,4 +1,4 @@
-import Alvamind, { AlvamindInstance } from 'alvamind';
+import Alvamind, { AlvamindInstance } from 'alvamind/dist/index.js';
 import { existsSync, mkdirSync } from 'fs';
 import type { Config } from '../types';
 import { validationService } from './validation.service';

@@ -1,4 +1,4 @@
-import Alvamind from 'alvamind';
+import Alvamind from 'alvamind/dist/index.js';
 import type { Config } from '../types';
 import schema from '../prisma-field-omitter.schema.json';
 

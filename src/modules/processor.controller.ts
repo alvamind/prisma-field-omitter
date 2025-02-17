@@ -1,4 +1,4 @@
-import Alvamind, { AlvamindInstance } from 'alvamind';
+import Alvamind, { AlvamindInstance } from 'alvamind/dist/index.js';
 import { basename, join } from "path";
 import { Node, TypeNode, InterfaceDeclaration, PropertySignature } from "ts-morph";
 import { processorService } from './processor.service';

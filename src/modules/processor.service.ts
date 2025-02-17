@@ -1,4 +1,4 @@
-import Alvamind from 'alvamind';
+import Alvamind from 'alvamind/dist/index.js';
 import { Project, Node, PropertySignature } from "ts-morph";
 import { Glob } from "bun";
 import type { Config } from '../types';

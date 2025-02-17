@@ -1,4 +1,4 @@
-import Alvamind from 'alvamind';
+import Alvamind from 'alvamind/dist/index.js';
 
 export interface ProcessingStats {
     filesProcessed: number;
