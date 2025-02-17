@@ -1,7 +1,7 @@
 import Alvamind from 'alvamind';
 import { Project, Node, PropertySignature } from "ts-morph";
 import { Glob } from "bun";
-import type { Config } from '../../types';
+import type { Config } from '../types';
 import { existsSync } from 'fs';
 
 

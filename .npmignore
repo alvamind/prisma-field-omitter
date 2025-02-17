@@ -1,0 +1,36 @@
+# Source
+src/
+test/
+
+# Configuration
+tsconfig.json
+.gitignore
+.npmignore
+*.config.json
+*.schema.json
+
+# Development
+node_modules/
+coverage/
+.vscode/
+.idea/
+*.log
+*.tsbuildinfo
+
+# Docs and examples
+docs/
+examples/
+*.md
+!README.md
+
+# Build artifacts
+dist/*.map
+
+# Version control
+.git/
+.github/
+
+# Test files
+__tests__/
+*.test.ts
+*.spec.ts

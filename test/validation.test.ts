@@ -1,5 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import { validationService } from "../src/modules/validation/validation.service";
+import { validationService } from "../src/modules/validation.service";
 import schema from "../src/prisma-field-omitter.schema.json";
 import type { Config } from "../src/types";
 

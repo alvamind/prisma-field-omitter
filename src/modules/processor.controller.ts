@@ -2,24 +2,27 @@ import Alvamind from 'alvamind';
 import { basename, join } from "path";
 import { Node, TypeNode, InterfaceDeclaration, PropertySignature } from "ts-morph";
 import { processorService } from './processor.service';
-import { progressService } from '../progress/progress.service';
-import { statsService, type ProcessingStats } from '../stats/stats.service';
-import { validationService } from '../validation/validation.service';
-import type { Config } from '../../types';
+import { progressService } from './progress.service';
+import { statsService, type ProcessingStats } from './stats.service';
+import { validationService } from './validation.service';
+import { loggerService } from './logger.service';
+import type { Config } from '../types';
 
 export const processorController = Alvamind({ name: 'processor.controller' })
     .use(processorService)
     .use(progressService)
     .use(statsService)
     .use(validationService)
+    .use(loggerService)
     .derive(({
         processorService: { createProject, matchesPattern, getTargetPatterns, processProperties, shouldProcessProperty, getInputFiles },
         progressService: { create },
         statsService: { createStats },
-        validationService: { validateConfig } }) => {
+        validationService: { validateConfig },
+        loggerService: { info, warn } }) => {
 
         const processFile = async (file: string, config: Config, patternCache: Map<string, boolean>, stats: ProcessingStats) => {
-            console.log(`Processing file: ${file}`);
+            info(`Processing file: ${file}`);
             const project = createProject();
             const sourceFile = project.addSourceFileAtPath(file);
             const declarations = [...sourceFile.getTypeAliases(), ...sourceFile.getInterfaces()];
@@ -57,7 +60,7 @@ export const processorController = Alvamind({ name: 'processor.controller' })
 
             if (modified) {
                 const outputPath = join(config.outputDir, basename(file));
-                console.log(`Writing output to: ${outputPath}`);
+                info(`Writing output to: ${outputPath}`);
                 await Bun.write(outputPath, sourceFile.getFullText());
                 stats.filesProcessed++;
             }
@@ -81,21 +84,23 @@ export const processorController = Alvamind({ name: 'processor.controller' })
                 const files = await getInputFiles(inputPatterns);
 
                 if (files.length === 0) {
-                    console.warn('No input files found matching the specified patterns');
+                    warn('No input files found matching the specified patterns');
                     return;
                 }
 
                 const progress = create(files.length, 'Processing files');
 
                 for (const file of files) {
+                    progress.clear(); // Clear before file processing message
                     await processFile(file, config, patternCache, stats);
                     progress.increment();
                 }
 
-                console.log('\nProcessing completed:');
-                console.log(`- Files processed: ${stats.filesProcessed}`);
-                console.log(`- Types modified: ${stats.typesModified}`);
-                console.log(`- Fields modified: ${stats.fieldsModified}`);
+                progress.clear(); // Ensure progress bar is cleared
+                info('\nProcessing completed:');
+                info(`- Files processed: ${stats.filesProcessed}`);
+                info(`- Types modified: ${stats.typesModified}`);
+                info(`- Fields modified: ${stats.fieldsModified}`);
             }
         };
     });

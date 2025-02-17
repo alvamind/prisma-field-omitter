@@ -1,5 +1,5 @@
 import { expect, test, describe, beforeAll, afterAll } from "bun:test";
-import { processorController } from "../src/modules/processor/processor.controller";
+import { processorController } from "../src/modules/processor.controller";
 import type { Config } from "../src/types";
 import { mkdirSync, rmSync } from "fs";
 import { join } from "path";

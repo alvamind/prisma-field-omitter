@@ -1,6 +1,6 @@
 import Alvamind from 'alvamind';
-import type { Config } from '../../types';
-import schema from '../../prisma-field-omitter.schema.json';
+import type { Config } from '../types';
+import schema from '../prisma-field-omitter.schema.json';
 
 export const validationService = Alvamind({ name: 'validation.service' })
     .decorate('validationService', {
