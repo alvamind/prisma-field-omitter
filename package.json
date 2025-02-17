@@ -1,6 +1,6 @@
 {
   "name": "prisma-field-omitter",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "A utility to omit fields from Prisma queries",
   "type": "module",
   "main": "dist/index.js",
@@ -16,7 +16,6 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "build": "tsc && chmod +x dist/cli.js",
-    "prepublishOnly": "bun run clean && bun run build",
     "clean": "clean"
   },
   "keywords": [
