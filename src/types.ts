@@ -1,15 +1,17 @@
+export interface HideRule {
+    field: string | string[];
+    target?: "all" | string[];
+    on?: "input" | "output" | "both";
+}
+
 export interface Config {
-    originFile: string | string[]; // Now supports glob patterns
-    outputDir: string; // Changed from outputFile to outputDir
+    originFile: string | string[];
+    outputDir: string;
     deleteOriginFile?: boolean;
-    action?: 'comment' | 'delete';
+    action?: "comment" | "delete";
     generateOmitTypes?: boolean;
     generatedOmitTypesOutputPath?: string;
-    hide: Array<{
-        field: string | string[];
-        target?: 'all' | string[];
-        on?: 'input' | 'output' | 'both';
-    }>;
+    hide: HideRule[];
     [key: string]: unknown;  // Add index signature
 }
 

@@ -3,7 +3,7 @@ import { processorController } from './modules/processor/processor.controller';
 import type { Config, ProcessingOptions } from './types';
 import { run } from "./cli";
 
-const app = Alvamind({ name: 'prisma-field-omitter' })
+Alvamind({ name: 'prisma-field-omitter' })
     .use(processorController)
     .derive(({ processorController }) => ({
         run: async (options: ProcessingOptions) => {
@@ -28,20 +28,25 @@ async function readConfig(configPath: string): Promise<Config> {
     return await file.json() as Config;
 }
 
-const args = process.argv.slice(2);
-const configIndex = args.indexOf('--config');
+if (import.meta.main) {
+    const args = process.argv.slice(2);
+    const configIndex = args.indexOf('--config');
 
-if (configIndex === -1 || !args[configIndex + 1]) {
-    console.error('Error: --config option is required');
-    process.exit(1);
+    if (configIndex === -1 || !args[configIndex + 1]) {
+        console.error('Error: --config option is required');
+        process.exit(1);
+    }
+
+    const configPath = args[configIndex + 1];
+
+    run({
+        configPath,
+        verbose: args.includes('--verbose')
+    }).catch((error) => {
+        console.error('Fatal error:', error);
+        process.exit(1);
+    });
 }
 
-const configPath = args[configIndex + 1];
-
-run({
-    configPath,
-    verbose: args.includes('--verbose')
-}).catch((error) => {
-    console.error('Fatal error:', error);
-    process.exit(1);
-});
+// Export for testing
+export { run };

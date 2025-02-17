@@ -36,14 +36,13 @@ const createConfigFile = async (fileName: string, config: any): Promise<string> 
 
 const runCli = async (args: string[]): Promise<{ code: number, output: string }> => {
     try {
-        // Remove array spreading to preserve argument structure
-        const proc = await $`bun run start ${args.join(' ')}`;
+        const cliPath = join(import.meta.dir, '..', 'src', 'index.ts');
+        const proc = await $`bun run ${cliPath} ${args.join(' ')}`;
         return {
             code: proc.exitCode,
             output: proc.stdout.toString() + proc.stderr.toString()
         };
     } catch (error: any) {
-        // Handle the case where the command fails
         return {
             code: error.exitCode || 1,
             output: error.stdout?.toString() + error.stderr?.toString() || error.message
@@ -85,7 +84,7 @@ describe("CLI with JSON config", () => {
             }]
         });
 
-        const { code, output } = await runCli(["--config", configPath]);
+        const { code } = await runCli(["--config", configPath]);
         expect(code).toBe(0);
 
         const result = await Bun.file(join(OUTPUT_DIR, "types.ts")).text();
