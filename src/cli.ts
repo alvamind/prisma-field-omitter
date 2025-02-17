@@ -29,8 +29,14 @@ if (require.main === module || import.meta.main) {
         process.exit(1);
     }
 
+    const configPath = args[configIndex + 1];
+    if (!configPath) {
+        loggerService.loggerService.error('Error: --config value is missing');
+        process.exit(1);
+    }
+
     const options: ProcessingOptions = {
-        configPath: args[configIndex + 1],
+        configPath,
         verbose: args.includes('--verbose')
     };
 

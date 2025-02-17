@@ -27,7 +27,7 @@ Alvamind({ name: 'prisma-field-omitter' })
         }
     }));
 
-if (import.meta.main) {
+if (require.main === module || import.meta.main) {
     const args = process.argv.slice(2);
     const configIndex = args.indexOf('--config');
 
@@ -36,8 +36,14 @@ if (import.meta.main) {
         process.exit(1);
     }
 
+    const configPath = args[configIndex + 1];
+    if (!configPath) {
+        loggerService.loggerService.error('Error: --config value is missing');
+        process.exit(1);
+    }
+
     const options: ProcessingOptions = {
-        configPath: args[configIndex + 1],
+        configPath,
         verbose: args.includes('--verbose')
     };
 

@@ -15,9 +15,8 @@
   ],
   "scripts": {
     "start": "bun run src/index.ts",
-    "build": "bun build ./src/index.ts --outdir ./dist --target node --minify && bun build ./src/cli.ts --outdir ./dist --target node --minify && chmod +x ./dist/cli.js",
+    "build": "tsc && chmod +x dist/cli.js",
     "prepublishOnly": "bun run clean && bun run build",
-    "test": "bun test",
     "clean": "rm -rf dist"
   },
   "keywords": [
@@ -34,10 +33,11 @@
   "dependencies": {
     "alvamind": "^1.0.10",
     "alvamind-tools": "^1.0.23",
-    "ts-morph": "^25.0.1",
-    "typescript": "^5.7.3"
+    "bun": "^1.0.0",
+    "ts-morph": "^25.0.1"
   },
   "devDependencies": {
+    "@types/bun": "^1.2.2",
     "bun-types": "latest",
     "typescript": "^5.0.0"
   },
