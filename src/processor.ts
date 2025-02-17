@@ -1,8 +1,7 @@
 import type { Config } from "./types";
-import { Project, Node, PropertySignature, SyntaxKind } from "ts-morph";
+import { Project, Node, PropertySignature } from "ts-morph";
 import { Glob } from "bun";
 import { basename, join } from "path";
-import { unlinkSync } from "fs";
 
 export class TypeProcessor {
     private project: Project;
@@ -22,103 +21,82 @@ export class TypeProcessor {
 
     private async processFile(file: string) {
         const sourceFile = this.project.addSourceFileAtPath(file);
-        const processors = [
-            ...sourceFile.getTypeAliases().map(type => ({
-                name: type.getName(),
-                node: type.getTypeNode(),
-                type: 'type' as const
-            })),
-            ...sourceFile.getInterfaces().map(int => ({
-                name: int.getName(),
-                node: int,
-                type: 'interface' as const
-            }))
+        const declarations = [
+            ...sourceFile.getTypeAliases(),
+            ...sourceFile.getInterfaces()
         ];
 
-        processors.forEach(({ name, node, type }) => {
-            if (!this.shouldProcessType(name)) return;
+        declarations.forEach(decl => {
+            const name = decl.getName();
+            if (!this.matchesPattern(name, this.getTargetPatterns())) return;
 
-            const properties = type === 'type' && Node.isTypeLiteral(node)
+            const node = 'getTypeNode' in decl ? decl.getTypeNode() : decl;
+            const properties = Node.isTypeLiteral(node) || Node.isInterfaceDeclaration(node)
                 ? Array.from(node.getProperties())
-                : type === 'interface' ? Array.from(node.getProperties()) : [];
+                : [];
 
             this.processProperties(properties, name);
         });
 
-        const outputPath = join(this.config.outputDir, basename(file));
-        await Bun.write(outputPath, sourceFile.getFullText());
+        await Bun.write(
+            join(this.config.outputDir, basename(file)),
+            sourceFile.getFullText()
+        );
 
-        if (this.config.deleteOriginFile) {
-            unlinkSync(file);
-        }
+        this.config.deleteOriginFile && sourceFile.delete();
     }
 
     private processProperties(properties: PropertySignature[], typeName: string) {
-        const propertiesToModify: PropertySignature[] = [];
+        const toModify = properties.filter(prop =>
+            !prop.wasForgotten() &&
+            Node.isPropertySignature(prop) &&
+            (this.shouldHideField(prop.getName(), typeName) || this.hasHiddenNestedFields(prop, typeName))
+        );
 
-        properties.forEach(prop => {
-            if (!Node.isPropertySignature(prop)) return;
-
-            const fieldName = prop.getName();
-            if (this.shouldHideField(fieldName, typeName)) {
-                propertiesToModify.push(prop);
-                return; // Skip processing nested types if field should be hidden
-            }
-
-            // Process nested types
-            const typeNode = prop.getTypeNode();
-            if (typeNode) {
-                typeNode.getChildrenOfKind(SyntaxKind.TypeLiteral)
-                    .forEach(child => {
-                        if (Node.isTypeLiteral(child)) {
-                            this.processProperties(Array.from(child.getMembers() as PropertySignature[]), typeName);
-                        }
-                    });
-            }
+        toModify.forEach(prop => {
+            if (prop.wasForgotten()) return;
+            const text = prop.getText();
+            this.config.action === 'delete'
+                ? prop.remove()
+                : prop.replaceWithText(text.split('\n').map(line => `// ${line}`).join('\n'));
         });
-
-        propertiesToModify.forEach(prop => this.hideProperty(prop));
     }
 
-    private hideProperty(prop: PropertySignature) {
-        const text = prop.getFullText().trim();
-        this.config.action === 'delete'
-            ? prop.remove()
-            : prop.replaceWithText(`// ${text}`);
+    private hasHiddenNestedFields(prop: PropertySignature, typeName: string): boolean {
+        const typeNode = prop.getTypeNode();
+        if (!typeNode || !Node.isTypeLiteral(typeNode)) return false;
+
+        return typeNode.getProperties().some(nested =>
+            this.shouldHideField(nested.getName(), typeName)
+        );
+    }
+
+    private matchesPattern(value: string, patterns: string[]): boolean {
+        return patterns.some(pattern => {
+            const isNegated = pattern.startsWith('!');
+            const actualPattern = isNegated ? pattern.slice(1) : pattern;
+            const matches = this.getCachedPattern(value, actualPattern);
+            return isNegated ? !matches : matches;
+        });
     }
 
     private getCachedPattern(key: string, pattern: string): boolean {
         const cacheKey = `${key}:${pattern}`;
-        if (!this.patternCache.has(cacheKey)) {
-            this.patternCache.set(cacheKey, new Glob(pattern).match(key));
-        }
-        return this.patternCache.get(cacheKey)!;
+        return this.patternCache.get(cacheKey) ??
+            this.patternCache.set(cacheKey, new Glob(pattern).match(key)).get(cacheKey)!;
     }
 
-    private shouldProcessType(typeName: string): boolean {
-        return this.config.hide.some(rule => {
-            const targets = Array.isArray(rule.target) ? rule.target :
-                rule.target === 'all' ? ['*'] : [rule.target || '*'];
-
-            return targets.some(target => {
-                const isNegated = target.startsWith('!');
-                const pattern = isNegated ? target.slice(1) : target;
-                const matches = this.getCachedPattern(typeName, pattern);
-                return isNegated ? !matches : matches;
-            });
-        });
+    private getTargetPatterns(): string[] {
+        return this.config.hide.flatMap(rule =>
+            Array.isArray(rule.target) ? rule.target :
+                rule.target === 'all' ? ['*'] : [rule.target || '*']
+        );
     }
 
     private shouldHideField(fieldName: string, typeName: string): boolean {
         return this.config.hide.some(rule =>
-            this.shouldProcessType(typeName) &&
-            (Array.isArray(rule.field) ? rule.field : [rule.field])
-                .some(pattern => {
-                    const isNegated = pattern.startsWith('!');
-                    const actualPattern = isNegated ? pattern.slice(1) : pattern;
-                    const matches = this.getCachedPattern(fieldName, actualPattern);
-                    return isNegated ? !matches : matches;
-                })
+            this.matchesPattern(typeName, this.getTargetPatterns()) &&
+            this.matchesPattern(fieldName, Array.isArray(rule.field) ? rule.field : [rule.field])
         );
     }
 
@@ -127,14 +105,16 @@ export class TypeProcessor {
             ? this.config.originFile
             : [this.config.originFile];
 
-        return Array.from(new Set(
-            (await Promise.all(patterns.map(async pattern => {
-                const files = [];
+        const fileArrays = await Promise.all(
+            patterns.map(async pattern => {
+                const results: string[] = [];
                 for await (const file of new Glob(pattern).scan({ absolute: true })) {
-                    files.push(file);
+                    results.push(file);
                 }
-                return files;
-            }))).flat()
-        ));
+                return results;
+            })
+        );
+
+        return Array.from(new Set(fileArrays.flat()));
     }
 }
