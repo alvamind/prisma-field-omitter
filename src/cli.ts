@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import type { ProcessingOptions } from "./types";
-import { processorController } from "./modules/processor.controller";
+import { processorController } from "./modules/processor.controller.js";
 import { configService } from "./modules/config.service";
 import { loggerService } from "./modules/logger.service";
 
@@ -22,7 +22,7 @@ export async function run(options: ProcessingOptions) {
 }
 
 // CLI execution handler – this block is only run when this file is executed directly.
-if (require.main === module || import.meta.main) {
+if (require.main === module) {
     const args = process.argv.slice(2);
     const configIndex = args.indexOf('--config');
 
