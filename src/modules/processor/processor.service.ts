@@ -3,6 +3,8 @@ import { Project, Node, PropertySignature } from "ts-morph";
 import { Glob } from "bun";
 import type { Config } from '../../types';
 
+
+
 export const processorService = Alvamind({ name: 'processor.service' })
     .decorate('processorService', {
         createProject: () => new Project({
@@ -14,7 +16,7 @@ export const processorService = Alvamind({ name: 'processor.service' })
             return patterns.some(pattern => {
                 const isNegated = pattern.startsWith('!');
                 const actualPattern = isNegated ? pattern.slice(1) : pattern;
-                const matches = processorService.processorService.getCachedPattern(value, actualPattern, patternCache);
+                const matches = self.getCachedPattern(value, actualPattern, patternCache);
                 return isNegated ? !matches : matches;
             });
         },
@@ -39,8 +41,8 @@ export const processorService = Alvamind({ name: 'processor.service' })
             patternCache: Map<string, boolean>
         ): boolean => {
             return config.hide.some(rule =>
-                processorService.processorService.matchesPattern(typeName, processorService.processorService.getTargetPatterns(config), patternCache) &&
-                processorService.processorService.matchesPattern(prop.getName(), Array.isArray(rule.field) ? rule.field : [rule.field], patternCache)
+                self.matchesPattern(typeName, self.getTargetPatterns(config), patternCache) &&
+                self.matchesPattern(prop.getName(), Array.isArray(rule.field) ? rule.field : [rule.field], patternCache)
             );
         },
 
@@ -78,3 +80,5 @@ export const processorService = Alvamind({ name: 'processor.service' })
             return Array.from(new Set(fileArrays.flat()));
         }
     });
+
+const self = processorService.processorService;

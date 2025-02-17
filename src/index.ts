@@ -7,9 +7,14 @@ const app = Alvamind({ name: 'prisma-field-omitter' })
     .derive(({ processorController }) => ({
         run: async (options: ProcessingOptions) => {
             try {
+                console.log('Starting prisma-field-omitter...');
                 const config = await readConfig(options.configPath);
+                const startTime = Date.now();
+
                 await processorController.process(config);
-                console.log('Processing completed successfully!');
+
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+                console.log(`Processing completed successfully in ${duration}s!`);
             } catch (error) {
                 console.error('Error during processing:', error);
                 process.exit(1);

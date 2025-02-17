@@ -2,11 +2,13 @@ import Alvamind from 'alvamind';
 import { basename, join } from "path";
 import { Node, TypeNode, InterfaceDeclaration, PropertySignature } from "ts-morph";
 import { processorService } from './processor.service';
+import { progressService } from '../progress/progress.service';
 import type { Config } from '../../types';
 
 export const processorController = Alvamind({ name: 'processor.controller' })
     .use(processorService)
-    .derive(({ processorService }) => {
+    .use(progressService)
+    .derive(({ processorService, progressService }) => {
         const processFile = async (file: string, config: Config, patternCache: Map<string, boolean>) => {
             const project = processorService.createProject();
             const sourceFile = project.addSourceFileAtPath(file);
@@ -45,7 +47,13 @@ export const processorController = Alvamind({ name: 'processor.controller' })
                 const files = await processorService.getInputFiles(
                     Array.isArray(config.originFile) ? config.originFile : [config.originFile]
                 );
-                await Promise.all(files.map(file => processFile(file, config, patternCache)));
+
+                const progress = progressService.create(files.length, 'Processing files');
+
+                for (const file of files) {
+                    await processFile(file, config, patternCache);
+                    progress.increment();
+                }
             }
         };
     });
