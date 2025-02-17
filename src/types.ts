@@ -12,7 +12,7 @@ export interface Config {
     generateOmitTypes?: boolean;
     generatedOmitTypesOutputPath?: string;
     hide: HideRule[];
-    [key: string]: unknown;  // Add index signature
+    [key: string]: unknown;
 }
 
 export interface ProcessingOptions {

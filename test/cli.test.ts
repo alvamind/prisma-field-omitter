@@ -1,12 +1,11 @@
 import { expect, test, describe, beforeAll, afterAll, beforeEach } from "bun:test";
-import { mkdirSync, rmSync, writeFileSync } from "fs";
-import { join } from "path";
-import { $ } from "bun";
+import { mkdirSync, rmSync, writeFileSync, existsSync } from "fs";
+import { join, resolve } from "path";
 
-const TEST_DIR = join(import.meta.dir, "cli-tmp");
-const INPUT_DIR = join(TEST_DIR, "input");
-const OUTPUT_DIR = join(TEST_DIR, "output");
-const CONFIG_DIR = join(TEST_DIR, "config");
+const TEST_DIR = resolve(import.meta.dir, "cli-tmp");
+const INPUT_DIR = resolve(TEST_DIR, "input");
+const OUTPUT_DIR = resolve(TEST_DIR, "output");
+const CONFIG_DIR = resolve(TEST_DIR, "config");
 
 const sampleTypes = `
 export type User = {
@@ -29,26 +28,59 @@ export type CreatePostInput = {
 `;
 
 const createConfigFile = async (fileName: string, config: any): Promise<string> => {
-    const configPath = join(CONFIG_DIR, fileName);
-    await Bun.write(configPath, JSON.stringify(config, null, 2));
+    const configPath = resolve(CONFIG_DIR, fileName);
+    const configContent = {
+        ...config,
+        // Handle originFile path conversion safely
+        originFile: config.originFile ? (
+            Array.isArray(config.originFile)
+                ? config.originFile.map((p: string) => resolve(p))
+                : resolve(config.originFile)
+        ) : undefined,
+        outputDir: resolve(config.outputDir || OUTPUT_DIR)
+    };
+    await Bun.write(configPath, JSON.stringify(configContent, null, 2));
     return configPath;
 };
 
 const runCli = async (args: string[]): Promise<{ code: number, output: string }> => {
     try {
-        const cliPath = join(import.meta.dir, '..', 'src', 'index.ts');
-        const proc = await $`bun run ${cliPath} ${args.join(' ')}`;
+        const cliPath = resolve(import.meta.dir, '..', 'src', 'index.ts');
+
+        // Mock process.stdout.clearLine for tests
+        if (!process.stdout.clearLine) {
+            process.stdout.clearLine = (_dir: number, callback?: () => void) => {
+                if (callback) {
+                    callback();
+                }
+                return true;
+            };
+        }
+
+        const proc = Bun.spawn(['bun', 'run', cliPath, ...args], {
+            stdout: 'pipe',
+            stderr: 'pipe',
+            cwd: process.cwd(),
+            env: { ...process.env, NODE_ENV: 'test' }
+        });
+
+        const output = await new Response(proc.stdout).text();
+        const error = await new Response(proc.stderr).text();
+        const exitCode = await proc.exited;
+
         return {
-            code: proc.exitCode,
-            output: proc.stdout.toString() + proc.stderr.toString()
+            code: exitCode,
+            output: output + error
         };
     } catch (error: any) {
         return {
-            code: error.exitCode || 1,
-            output: error.stdout?.toString() + error.stderr?.toString() || error.message
+            code: 1,
+            output: error.message || String(error)
         };
     }
 };
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 describe("CLI with JSON config", () => {
     beforeAll(() => {
@@ -67,7 +99,13 @@ describe("CLI with JSON config", () => {
         mkdirSync(OUTPUT_DIR, { recursive: true });
 
         // Create fresh test file
-        writeFileSync(join(INPUT_DIR, "types.ts"), sampleTypes);
+        const inputFile = join(INPUT_DIR, "types.ts");
+        writeFileSync(inputFile, sampleTypes);
+
+        // Ensure the file exists
+        if (!existsSync(inputFile)) {
+            throw new Error(`Test file not created: ${inputFile}`);
+        }
     });
 
     test("should process files using basic JSON config", async () => {
@@ -85,12 +123,18 @@ describe("CLI with JSON config", () => {
         });
 
         const { code } = await runCli(["--config", configPath]);
-        expect(code).toBe(0);
 
-        const result = await Bun.file(join(OUTPUT_DIR, "types.ts")).text();
+        // Add small delay to ensure file system operations complete
+        await sleep(100);
+
+        const outputFile = join(OUTPUT_DIR, "types.ts");
+        expect(existsSync(outputFile)).toBe(true);
+
+        const result = await Bun.file(outputFile).text();
         expect(result).toContain("// createdAt: Date");
         expect(result).toContain("// updatedAt: Date");
         expect(result).toContain("email: string");
+        expect(code).toBe(0);
     });
 
     test("should handle multiple field patterns in JSON config", async () => {
@@ -107,7 +151,8 @@ describe("CLI with JSON config", () => {
             }]
         });
 
-        const { code } = await runCli(["--config", configPath]);
+        const { code, output } = await runCli(["--config", configPath]);
+        expect(output).not.toContain("Error");
         expect(code).toBe(0);
 
         const result = await Bun.file(join(OUTPUT_DIR, "types.ts")).text();
@@ -162,7 +207,8 @@ describe("CLI with JSON config", () => {
             ]
         });
 
-        const { code } = await runCli(["--config", configPath]);
+        const { code, output } = await runCli(["--config", configPath]);
+        expect(output).not.toContain("Error");
         expect(code).toBe(0);
 
         const result = await Bun.file(join(OUTPUT_DIR, "types.ts")).text();
@@ -193,7 +239,8 @@ describe("CLI with JSON config", () => {
             }]
         });
 
-        const { code } = await runCli(["--config", configPath]);
+        const { code, output } = await runCli(["--config", configPath]);
+        expect(output).not.toContain("Error");
         expect(code).toBe(0);
 
         const results = await Promise.all([

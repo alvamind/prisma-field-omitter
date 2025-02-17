@@ -15,8 +15,12 @@ export const progressService = Alvamind({ name: 'progress.service' })
                     process.stdout.write(`\r${label}: [${bar}] ${percentage}% (${current}/${total})`);
 
                     if (current === total) {
-                        process.stdout.clearLine(0);
-                        process.stdout.cursorTo(0);
+                        if (typeof process.stdout.clearLine === 'function') {
+                            process.stdout.clearLine(0);
+                        }
+                        if (typeof process.stdout.cursorTo === 'function') {
+                            process.stdout.cursorTo(0);
+                        }
                     }
                 }
             };

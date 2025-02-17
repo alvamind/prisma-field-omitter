@@ -24,7 +24,13 @@ Alvamind({ name: 'prisma-field-omitter' })
     }));
 
 async function readConfig(configPath: string): Promise<Config> {
+    if (!configPath) {
+        throw new Error('Config path is required');
+    }
     const file = Bun.file(configPath);
+    if (!await file.exists()) {
+        throw new Error(`Config file not found: ${configPath}`);
+    }
     return await file.json() as Config;
 }
 
@@ -37,12 +43,12 @@ if (import.meta.main) {
         process.exit(1);
     }
 
-    const configPath = args[configIndex + 1];
-
-    run({
-        configPath,
+    const options: ProcessingOptions = {
+        configPath: args[configIndex + 1],
         verbose: args.includes('--verbose')
-    }).catch((error) => {
+    };
+
+    run(options).catch((error) => {
         console.error('Fatal error:', error);
         process.exit(1);
     });
