@@ -56,23 +56,25 @@ export class TypeProcessor {
         toModify.forEach(prop => {
             if (prop.wasForgotten()) return;
 
-            if (this.config.action === 'delete') {
-                prop.remove();
-            } else {
-                // Handle commenting more carefully
-                const lines = prop.getText().split('\n');
-                const indentation = lines[0].match(/^\s*/)?.[0] || '';
-                const commentedLines = lines.map(line =>
-                    line ? `${indentation}// ${line.trim()}` : line
+            // Process nested properties first
+            this.processNestedProperties(prop, typeName);
+
+            // Then modify or remove the parent property
+            const text = prop.getText();
+            this.config.action === 'delete'
+                ? prop.remove()
+                : prop.replaceWithText(
+                    text
+                        .split('\n')
+                        .map(line => `// ${line}`)
+                        .join('\n')
                 );
-                prop.replaceWithText(commentedLines.join('\n'));
-            }
         });
     }
 
     private shouldProcessProperty(prop: PropertySignature, typeName: string): boolean {
-        const propertyName = prop.getName();
-        return this.shouldHideField(propertyName, typeName);
+        return this.shouldHideField(prop.getName(), typeName) ||
+            this.hasHiddenNestedFields(prop, typeName);
     }
 
     private processNestedProperties(prop: PropertySignature, typeName: string) {
@@ -81,9 +83,7 @@ export class TypeProcessor {
 
         if (Node.isTypeLiteral(typeNode)) {
             const nestedProps = typeNode.getProperties();
-            if (nestedProps.length > 0) {
-                this.processProperties(nestedProps as PropertySignature[], typeName);
-            }
+            this.processProperties(nestedProps as PropertySignature[], typeName);
         } else if (Node.isIntersectionTypeNode(typeNode) || Node.isUnionTypeNode(typeNode)) {
             typeNode.getTypeNodes().forEach(node => {
                 if (Node.isTypeLiteral(node)) {
@@ -136,15 +136,8 @@ export class TypeProcessor {
 
     private getCachedPattern(key: string, pattern: string): boolean {
         const cacheKey = `${key}:${pattern}`;
-        if (!this.patternCache.has(cacheKey)) {
-            try {
-                const matches = new Glob(pattern).match(key);
-                this.patternCache.set(cacheKey, matches);
-            } catch {
-                this.patternCache.set(cacheKey, false);
-            }
-        }
-        return this.patternCache.get(cacheKey)!;
+        return this.patternCache.get(cacheKey) ??
+            this.patternCache.set(cacheKey, new Glob(pattern).match(key)).get(cacheKey)!;
     }
 
     private getTargetPatterns(): string[] {
