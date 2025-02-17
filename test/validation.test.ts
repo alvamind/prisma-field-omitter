@@ -3,6 +3,8 @@ import { validationService } from "../src/modules/validation/validation.service"
 import schema from "../src/prisma-field-omitter.schema.json";
 import type { Config } from "../src/types";
 
+const validationServiceModule = validationService.validationService;
+
 describe("ConfigValidator", () => {
     test("should validate valid config with string originFile", () => {
         const config: Config = {
@@ -11,7 +13,7 @@ describe("ConfigValidator", () => {
             hide: [{ field: "*At" }]
         };
 
-        const errors = validationService.validateConfig(config);
+        const errors = validationServiceModule.validateConfig(config);
         expect(errors).toHaveLength(0);
     });
 
@@ -22,7 +24,7 @@ describe("ConfigValidator", () => {
             hide: [{ field: ["createdAt", "updatedAt"] }]
         };
 
-        const errors = validationService.validateConfig(config);
+        const errors = validationServiceModule.validateConfig(config);
         expect(errors).toHaveLength(0);
     });
 
@@ -34,7 +36,7 @@ describe("ConfigValidator", () => {
             hide: [{ field: "*At" }]
         };
 
-        const errors = validationService.validateConfig(config);
+        const errors = validationServiceModule.validateConfig(config);
         expect(errors).toContain("generatedOmitTypesOutputPath is required when generateOmitTypes is true");
     });
 
@@ -51,7 +53,7 @@ describe("ConfigValidator", () => {
             }]
         };
 
-        const errors = validationService.validateConfig(config);
+        const errors = validationServiceModule.validateConfig(config);
         expect(errors).toHaveLength(0);
     });
 
@@ -64,7 +66,7 @@ describe("ConfigValidator", () => {
             }]
         };
 
-        const errors = validationService.validateConfig(config as Config);
+        const errors = validationServiceModule.validateConfig(config as Config);
         expect(errors).toContain(`Missing required field: ${schema.required[0]}`);
     });
 
@@ -79,7 +81,7 @@ describe("ConfigValidator", () => {
             }]
         };
 
-        const errors = validationService.validateConfig(config as Config);
+        const errors = validationServiceModule.validateConfig(config as Config);
         expect(errors).toContain("Hide rule #1: Missing required field field");
 
         const configWithInvalidOn: Config = {
@@ -92,7 +94,7 @@ describe("ConfigValidator", () => {
             }]
         };
 
-        const errorsWithInvalidOn = validationService.validateConfig(configWithInvalidOn);
+        const errorsWithInvalidOn = validationServiceModule.validateConfig(configWithInvalidOn);
         expect(errorsWithInvalidOn).toContain("Hide rule #1: Invalid 'on' value. Must be input, output, both");
     });
 
@@ -107,7 +109,7 @@ describe("ConfigValidator", () => {
             }]
         };
 
-        const errors = validationService.validateConfig(config as Config);
+        const errors = validationServiceModule.validateConfig(config as Config);
         expect(errors).toContain(`Invalid action value. Must be ${schema.properties.action.enum.join(' or ')}`);
     });
 
@@ -121,7 +123,7 @@ describe("ConfigValidator", () => {
             }]
         };
 
-        const errors = validationService.validateConfig(config as Config);
+        const errors = validationServiceModule.validateConfig(config as Config);
         expect(errors).toContain("Hide rule #1: field must be a string or array of strings");
     });
 });

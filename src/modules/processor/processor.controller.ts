@@ -12,10 +12,12 @@ export const processorController = Alvamind({ name: 'processor.controller' })
     .use(progressService)
     .use(statsService)
     .use(validationService)
-    .derive(({ processorService: { createProject, matchesPattern, getTargetPatterns, processProperties, shouldProcessProperty, getInputFiles },
+    .derive(({
+        processorService: { createProject, matchesPattern, getTargetPatterns, processProperties, shouldProcessProperty, getInputFiles },
         progressService: { create },
         statsService: { createStats },
-        validationService }) => {
+        validationService: { validateConfig } }) => {
+
         const processFile = async (file: string, config: Config, patternCache: Map<string, boolean>, stats: ProcessingStats) => {
             const project = createProject();
             const sourceFile = project.addSourceFileAtPath(file);
@@ -59,7 +61,7 @@ export const processorController = Alvamind({ name: 'processor.controller' })
         return {
             process: async (config: Config) => {
                 // Validate config before processing
-                const validationErrors = validationService.validateConfig(config);
+                const validationErrors = validateConfig(config);
                 if (validationErrors.length > 0) {
                     throw new Error('Invalid configuration:\n' + validationErrors.join('\n'));
                 }
