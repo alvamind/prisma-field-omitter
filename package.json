@@ -1,7 +1,7 @@
 {
   "name": "prisma-field-omitter",
   "version": "1.0.0",
-  "description": "A tool to automatically hide or remove fields from Prisma-generated TypeScript types",
+  "description": "A utility to omit fields from Prisma queries",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,19 +15,17 @@
   ],
   "scripts": {
     "start": "bun run src/index.ts",
-    "build": "bun build ./src/index.ts ./src/cli.ts --outdir ./dist --target node --minify",
+    "build": "bun build ./src/index.ts --outdir ./dist --target node --minify && bun build ./src/cli.ts --outdir ./dist --target node --minify && chmod +x ./dist/cli.js",
     "prepublishOnly": "bun run clean && bun run build",
     "test": "bun test",
     "clean": "rm -rf dist"
   },
   "keywords": [
     "prisma",
-    "typescript",
-    "types",
-    "transformer",
-    "cli"
+    "utilities",
+    "field-omitter"
   ],
-  "author": "Your Name",
+  "author": "",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -40,9 +38,11 @@
     "typescript": "^5.7.3"
   },
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "typescript": "^5.0.0"
   },
   "peerDependencies": {
+    "@prisma/client": "^5.0.0",
     "typescript": "^5.0.0"
   }
 }

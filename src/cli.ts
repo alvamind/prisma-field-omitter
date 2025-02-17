@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import type { ProcessingOptions } from "./types";
 import { processorController } from "./modules/processor.controller";
 import { configService } from "./modules/config.service";
@@ -16,4 +17,25 @@ export async function run(options: ProcessingOptions) {
         loggerService.loggerService.error('Error during processing:', error);
         throw error;
     }
+}
+
+// Add CLI execution handler
+if (require.main === module || import.meta.main) {
+    const args = process.argv.slice(2);
+    const configIndex = args.indexOf('--config');
+
+    if (configIndex === -1 || !args[configIndex + 1]) {
+        loggerService.loggerService.error('Error: --config option is required');
+        process.exit(1);
+    }
+
+    const options: ProcessingOptions = {
+        configPath: args[configIndex + 1],
+        verbose: args.includes('--verbose')
+    };
+
+    run(options).catch((error) => {
+        loggerService.loggerService.error('Fatal error:', error);
+        process.exit(1);
+    });
 }

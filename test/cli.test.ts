@@ -45,21 +45,39 @@ const createConfigFile = async (fileName: string, config: any): Promise<string> 
 
 const runCli = async (args: string[]): Promise<{ code: number, output: string }> => {
     try {
-        const cliPath = resolve(import.meta.dir, '..', 'src', 'index.ts');
+        // Try to find CLI in different locations
+        const possibleCliPaths = [
+            resolve(import.meta.dir, '..', 'src', 'cli.ts'),
+            resolve(import.meta.dir, '..', 'dist', 'cli.js'),
+            resolve(import.meta.dir, '..', 'cli.js')
+        ];
+
+        let cliPath = '';
+        for (const path of possibleCliPaths) {
+            if (existsSync(path)) {
+                cliPath = path;
+                break;
+            }
+        }
+
+        if (!cliPath) {
+            throw new Error('CLI executable not found');
+        }
+
         console.log(`Running CLI with path: ${cliPath}`);
         console.log(`Arguments: ${args.join(' ')}`);
 
         // Mock process.stdout.clearLine for tests
         if (!process.stdout.clearLine) {
             process.stdout.clearLine = (_dir: number, callback?: () => void) => {
-                if (callback) {
-                    callback();
-                }
+                if (callback) callback();
                 return true;
             };
         }
 
-        const proc = Bun.spawn(['bun', 'run', cliPath, ...args], {
+        // Use node directly for .js files, bun for .ts files
+        const command = cliPath.endsWith('.ts') ? ['bun', 'run'] : ['node'];
+        const proc = Bun.spawn([...command, cliPath, ...args], {
             stdout: 'pipe',
             stderr: 'pipe',
             cwd: process.cwd(),

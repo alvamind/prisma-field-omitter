@@ -1,25 +1,24 @@
 {
   "compilerOptions": {
-    // Enable latest features
+    "target": "esnext",
+    "module": "esnext",
     "lib": [
-      "ESNext",
-      "DOM"
+      "esnext",
+      "dom"
     ],
-    "target": "esnext", // Changed from ES2020 to ensure compatibility
-    "module": "esnext", // Changed from ES2022 to support import.meta
     "moduleDetection": "force",
     "jsx": "react-jsx",
     "allowJs": true,
     // Bundler mode
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "noEmit": true,
     // Best practices
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
-    // Some stricter flags (disabled by default)
+    // Some stricter flags (disabled by default)a
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": false,
@@ -28,10 +27,17 @@
       "bun-types"
     ],
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/**/*",
-    "test/**/*" // Added to include test files
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
   ]
 }
