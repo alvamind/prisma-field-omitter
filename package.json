@@ -27,21 +27,20 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/prisma-field-omitter.git"
+    "url": "https://github.com/alvamind/prisma-field-omitter.git"
   },
   "dependencies": {
-    "alvamind": "^1.0.10",
+    "alvamind": "^1.0.11",
     "alvamind-tools": "^1.0.23",
-    "bun": "^1.0.0",
+    "bun": "^1.2.2",
     "ts-morph": "^25.0.1"
   },
   "devDependencies": {
     "@types/bun": "^1.2.2",
     "bun-types": "latest",
-    "typescript": "^5.0.0"
+    "typescript": "^5.7.3"
   },
   "peerDependencies": {
-    "@prisma/client": "^5.0.0",
     "typescript": "^5.0.0"
   }
 }

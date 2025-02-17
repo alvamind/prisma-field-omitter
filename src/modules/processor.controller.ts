@@ -1,4 +1,4 @@
-import Alvamind from 'alvamind';
+import Alvamind, { AlvamindInstance } from 'alvamind';
 import { basename, join } from "path";
 import { Node, TypeNode, InterfaceDeclaration, PropertySignature } from "ts-morph";
 import { processorService } from './processor.service';
@@ -9,7 +9,7 @@ import { loggerService } from './logger.service';
 import { unlink } from 'fs/promises';
 import type { Config } from '../types';
 
-export const processorController = Alvamind({ name: 'processor.controller' })
+export const processorController: AlvamindInstance = Alvamind({ name: 'processor.controller' })
   .use(processorService)
   .use(progressService)
   .use(statsService)
