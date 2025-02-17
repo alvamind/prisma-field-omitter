@@ -1,9 +1,6 @@
 {
-  "$schema": "./prisma-field-omitter.schema.json",
-  "originFile": [
-    "prisma/**/*.input.ts",
-    "prisma/**/*.output.ts"
-  ],
+  "$schema": "src/prisma-field-omitter.schema.json",
+  "originFile": ["prisma/**/*.input.ts", "prisma/**/*.output.ts"],
   "outputDir": "prisma/processed",
   "deleteOriginFile": false,
   "action": "comment",
@@ -16,34 +13,17 @@
       "on": "input"
     },
     {
-      "field": [
-        "isActive",
-        "type"
-      ],
-      "target": [
-        "User*Input",
-        "Post*Input"
-      ],
+      "field": ["isActive", "type"],
+      "target": ["User*Input", "Post*Input"],
       "on": "input"
     },
     {
       "field": "user",
-      "target": [
-        "create",
-        "update"
-      ]
+      "target": ["create", "update"]
     },
     {
-      "field": [
-        "include",
-        "upsert",
-        "disconnect",
-        "delete"
-      ],
-      "target": [
-        "UserMeta*UserNestedInput",
-        "Post*UserNestedInput"
-      ]
+      "field": ["include", "upsert", "disconnect", "delete"],
+      "target": ["UserMeta*UserNestedInput", "Post*UserNestedInput"]
     }
   ]
 }

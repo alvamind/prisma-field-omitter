@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+
 import type { ProcessingOptions } from "./types";
 import { processorController } from "./modules/processor.controller";
 import { configService } from "./modules/config.service";
@@ -10,6 +11,7 @@ export async function run(options: ProcessingOptions) {
     }
 
     try {
+        // Read configuration and process the files
         const config = await configService.configService.readConfig(options.configPath);
         await processorController.process(config);
         return true;
@@ -19,7 +21,7 @@ export async function run(options: ProcessingOptions) {
     }
 }
 
-// Add CLI execution handler
+// CLI execution handler – this block is only run when this file is executed directly.
 if (require.main === module || import.meta.main) {
     const args = process.argv.slice(2);
     const configIndex = args.indexOf('--config');

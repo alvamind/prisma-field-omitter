@@ -3,54 +3,30 @@ import { processorController } from './modules/processor.controller';
 import { configService } from './modules/config.service';
 import { loggerService } from './modules/logger.service';
 import type { ProcessingOptions } from './types';
-import { run } from "./cli";
 
+// Set up the Alvamind instance
 Alvamind({ name: 'prisma-field-omitter' })
-    .use(processorController)
-    .use(configService)
-    .use(loggerService)
-    .derive(({ processorController, configService: { readConfig }, loggerService: { info, success, error: logError } }) => ({
-        run: async (options: ProcessingOptions) => {
-            try {
-                info('Starting prisma-field-omitter...');
-                const config = await readConfig(options.configPath);
-                const startTime = Date.now();
+  .use(processorController)
+  .use(configService)
+  .use(loggerService)
+  .derive(({ process: processOmit, configService: { readConfig }, loggerService: { info, success, error: logError } }) => ({
+    run: async (options: ProcessingOptions) => {
+      try {
+        info('Starting prisma-field-omitter...');
+        const config = await readConfig(options.configPath);
+        const startTime = Date.now();
 
-                await processorController.process(config);
+        await processOmit(config);
 
-                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-                success(`Processing completed successfully in ${duration}s!`);
-            } catch (error) {
-                logError('Error during processing:', error);
-                process.exit(1);
-            }
-        }
-    }));
-
-if (require.main === module || import.meta.main) {
-    const args = process.argv.slice(2);
-    const configIndex = args.indexOf('--config');
-
-    if (configIndex === -1 || !args[configIndex + 1]) {
-        loggerService.loggerService.error('Error: --config option is required');
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+        success(`Processing completed successfully in ${duration}s!`);
+      } catch (error) {
+        logError('Error during processing:', error);
         process.exit(1);
+      }
     }
+  }));
 
-    const configPath = args[configIndex + 1];
-    if (!configPath) {
-        loggerService.loggerService.error('Error: --config value is missing');
-        process.exit(1);
-    }
-
-    const options: ProcessingOptions = {
-        configPath,
-        verbose: args.includes('--verbose')
-    };
-
-    run(options).catch((error) => {
-        loggerService.loggerService.error('Fatal error:', error);
-        process.exit(1);
-    });
-}
-
-export { run };
+// Instead of duplicating CLI argument processing here we export the run function 
+// and let cli.ts handle CLI execution.
+export { run } from "./cli";

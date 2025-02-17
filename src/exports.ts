@@ -1,7 +1,7 @@
 import { processorController } from './modules/processor.controller';
 
 // Get the controller methods from the Alvamind instance
-const controller = processorController.toJSON();
+const controller = processorController;
 
 // Export the process function directly from the controller
 export const process = controller.process;

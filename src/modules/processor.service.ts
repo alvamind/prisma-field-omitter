@@ -86,6 +86,40 @@ export const processorService = Alvamind({ name: 'processor.service' })
                 })
             );
             return Array.from(new Set(fileArrays.flat()));
+        },
+
+        processNestedProperties: (
+            node: Node,
+            typeName: string,
+            config: Config,
+            patternCache: Map<string, boolean>
+        ): void => {
+            if (node.wasForgotten()) return;
+
+            if (Node.isTypeLiteral(node)) {
+                const properties = node.getProperties()
+                    .filter((p): p is PropertySignature => Node.isPropertySignature(p) && !p.wasForgotten());
+
+                const toModify = properties.filter(prop =>
+                    !prop.wasForgotten() && self.shouldProcessProperty(prop, typeName, config, patternCache)
+                );
+
+                toModify.forEach(prop => {
+                    if (prop.wasForgotten()) return;
+                    const text = prop.getText();
+                    config.action === "delete"
+                        ? prop.remove()
+                        : prop.replaceWithText(text.split("\n").map(line => `// ${line}`).join("\n"));
+                });
+
+                properties.forEach(prop => {
+                    if (prop.wasForgotten()) return;
+                    const propTypeNode = prop.getTypeNode();
+                    if (propTypeNode && !propTypeNode.wasForgotten()) {
+                        self.processNestedProperties(propTypeNode, typeName, config, patternCache);
+                    }
+                });
+            }
         }
     });
 

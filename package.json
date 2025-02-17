@@ -17,7 +17,7 @@
     "start": "bun run src/index.ts",
     "build": "tsc && chmod +x dist/cli.js",
     "prepublishOnly": "bun run clean && bun run build",
-    "clean": "rm -rf dist"
+    "clean": "clean"
   },
   "keywords": [
     "prisma",
