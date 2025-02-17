@@ -4,18 +4,17 @@
     "": {
       "name": "prisma-field-omitter",
       "dependencies": {
-        "alvamind": "^1.0.10",
+        "alvamind": "^1.0.11",
         "alvamind-tools": "^1.0.23",
-        "bun": "^1.0.0",
+        "bun": "^1.2.2",
         "ts-morph": "^25.0.1",
       },
       "devDependencies": {
         "@types/bun": "^1.2.2",
         "bun-types": "latest",
-        "typescript": "^5.0.0",
+        "typescript": "^5.7.3",
       },
       "peerDependencies": {
-        "@prisma/client": "^5.0.0",
         "typescript": "^5.0.0",
       },
     },
@@ -48,8 +47,6 @@
     "@oven/bun-windows-x64": ["@oven/bun-windows-x64@1.2.2", "", { "os": "win32", "cpu": "x64" }, "sha512-ZjxyIcS7kQFoGxyNBMZ9mqCxCkg7ZVG9P+/GTzMpUceFF/q88lUwsFsC7YwAe0ZubqcQLRSfdyjbKbC/HuqnFw=="],
 
     "@oven/bun-windows-x64-baseline": ["@oven/bun-windows-x64-baseline@1.2.2", "", { "os": "win32", "cpu": "x64" }, "sha512-bYopMWSCjjjCKjANv7xxAXQoabVUxLZxTw0iC1bGYD9VZGo48nGaJXPn7DsPfeCXGyl+CY3Cy4QIEn+3gNRS2A=="],
-
-    "@prisma/client": ["@prisma/client@5.22.0", "", { "peerDependencies": { "prisma": "*" }, "optionalPeers": ["prisma"] }, "sha512-M0SVXfyHnQREBKxCgyo7sffrKttwE6R8PMq330MIUF0pTwjUhLbW84pFDlf06B27XyCR++VtjugEnIHdr07SVA=="],
 
     "@ts-morph/common": ["@ts-morph/common@0.26.1", "", { "dependencies": { "fast-glob": "^3.3.2", "minimatch": "^9.0.4", "path-browserify": "^1.0.1" } }, "sha512-Sn28TGl/4cFpcM+jwsH1wLncYq3FtN/BIpem+HOygfBWPT5pAeS5dB4VFVzV8FbnOKHpDLZmvAl4AjPEev5idA=="],
 
