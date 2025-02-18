@@ -44,6 +44,7 @@ export const processorService = Alvamind({ name: 'processor.service' })
       config: Config,
       shouldProcessProperty: (prop: PropertySignature, typeName: string) => boolean
     ) => {
+      let count = 0;
       const toModify = properties.filter(prop =>
         !prop.wasForgotten() &&
         Node.isPropertySignature(prop) &&
@@ -56,7 +57,9 @@ export const processorService = Alvamind({ name: 'processor.service' })
         config.action === 'delete'
           ? prop.remove()
           : prop.replaceWithText(text.split('\n').map(line => `// ${line}`).join('\n'));
+        count++;
       });
+      return count;
     },
 
     getInputFiles: async (patterns: string[]): Promise<string[]> => {

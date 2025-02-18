@@ -1,6 +1,6 @@
 import Alvamind, { AlvamindInstance } from 'alvamind';
 import { basename, join } from "path";
-import { Node, TypeNode, InterfaceDeclaration, PropertySignature } from "ts-morph";
+import { Node, PropertySignature } from "ts-morph";
 import { processorService } from './processor.service';
 import { progressService } from './progress.service';
 import { statsService, type ProcessingStats } from './stats.service';
@@ -16,70 +16,66 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
   .use(validationService)
   .use(loggerService)
   .derive(({
-    processorService: { createProject, matchesPattern, getTargetPatterns, shouldProcessProperty, processNestedProperties, getInputFiles },
+    processorService: { createProject, matchesPattern, getTargetPatterns, shouldProcessProperty, processNestedProperties, getInputFiles, processProperties },
     progressService: { create },
     statsService: { createStats },
     validationService: { validateConfig },
     loggerService: { info, warn } }) => {
 
-    const processFile = async (file: string, config: Config, stats: ProcessingStats) => {
-      info(`Processing file: ${file}`);
-      const project = createProject();
-      const sourceFile = project.addSourceFileAtPath(file);
-
-      const declarations = [
-        ...sourceFile.getTypeAliases(),
-        ...sourceFile.getInterfaces(),
-        ...sourceFile.getClasses(),
-      ];
-
-      for (const decl of declarations) {
-        const name = decl.getName();
-        if (!name) continue; // Skip declarations without names
-
-        const targetPatterns = getTargetPatterns(config);
-        if (!matchesPattern(name, targetPatterns)) continue;
-
-        const node = 'getTypeNode' in decl ? decl.getTypeNode() : decl;
-        if (!node) continue;
-
-        let properties: PropertySignature[] = [];
-        if (Node.isTypeLiteral(node as TypeNode) || Node.isInterfaceDeclaration(node as InterfaceDeclaration)) {
-          properties = (node as any).getProperties()
-            .filter((p: any): p is PropertySignature => Node.isPropertySignature(p));
+    const extractProperties = (decl: any): PropertySignature[] => {
+      switch (true) {
+        case Node.isTypeAliasDeclaration(decl): {
+          const typeNode = decl.getTypeNode();
+          return (typeNode && Node.isTypeLiteral(typeNode))
+            ? typeNode.getProperties().filter(Node.isPropertySignature)
+            : [];
         }
+        case Node.isInterfaceDeclaration(decl):
+          return decl.getProperties().filter(Node.isPropertySignature);
+        default:
+          return [];
+      }
+    };
 
-        const modifiedProperties = properties.filter(prop =>
-          shouldProcessProperty(prop, name, config));
+    const processDeclaration = (
+      decl: any,
+      config: Config,
+      stats: ProcessingStats
+    ): void => {
+      const name = decl.getName();
+      if (!name || !matchesPattern(name, getTargetPatterns(config))) return;
 
-        if (modifiedProperties.length > 0) {
-          stats.typesModified++;
-          stats.fieldsModified += modifiedProperties.length;
+      const properties = extractProperties(decl);
+      if (properties.length === 0) return;
 
-          modifiedProperties.forEach(prop => {
-            const text = prop.getText();
-            if (config.action === "delete") {
-              prop.remove();
-            } else {
-              prop.replaceWithText(text.split('\n').map(line => `// ${line}`).join('\n'));
-            }
-          });
-        }
+      const boundShouldProcessProperty = (prop: PropertySignature, typeName: string) =>
+        shouldProcessProperty(prop, typeName, config);
 
-        // Process nested properties without checking a "modified" flag
-        properties.forEach(prop => {
-          if (prop.wasForgotten()) return;
-          const propTypeNode = prop.getTypeNode();
-          if (propTypeNode && !propTypeNode.wasForgotten() && (Node.isTypeLiteral(propTypeNode) || Node.isTypeReference(propTypeNode))) {
-            processNestedProperties(propTypeNode, name, config);
-          }
-        });
+      const modifiedCount = processProperties(properties, name, config, boundShouldProcessProperty);
+      if (modifiedCount > 0) {
+        stats.typesModified++;
+        stats.fieldsModified += modifiedCount;
       }
 
-      const outputPath = join(config.outputDir, basename(file));
-      info(`Writing output to: ${outputPath}`);
+      properties
+        .filter(prop => !prop.wasForgotten())
+        .forEach(prop => {
+          const typeNode = prop.getTypeNode();
+          if (typeNode && !typeNode.wasForgotten() &&
+            (Node.isTypeLiteral(typeNode) || Node.isTypeReference(typeNode))) {
+            processNestedProperties(typeNode, name, config);
+          }
+        });
+    };
 
-      // Always write the file
+    const processFile = async (file: string, config: Config, stats: ProcessingStats) => {
+      const sourceFile = createProject().addSourceFileAtPath(file);
+      info(`Processing file: ${file}`);
+
+      [...sourceFile.getTypeAliases(), ...sourceFile.getInterfaces()]
+        .forEach(decl => processDeclaration(decl, config, stats));
+
+      const outputPath = join(config.outputDir, basename(file));
       await Bun.write(outputPath, sourceFile.getFullText());
       stats.filesProcessed++;
 
@@ -99,20 +95,20 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
           throw new Error('Configuration validation failed:\n' + validationErrors.join('\n'));
         }
 
-        // Ensure output directory exists
         await Bun.write(join(config.outputDir, '.keep'), '');
-
         const stats = createStats();
-        const inputPatterns = Array.isArray(config.originFile) ? config.originFile : [config.originFile];
-        const files = await getInputFiles(inputPatterns);
+
+        const files = (await getInputFiles(Array.isArray(config.originFile)
+          ? config.originFile
+          : [config.originFile]))
+          .filter(file => !file.includes(config.outputDir));
 
         if (files.length === 0) {
           warn('No input files found matching the specified patterns');
-          return stats; // Return stats even if no files were found
+          return stats;
         }
 
         const progress = create(files.length, 'Processing files');
-
         for (const file of files) {
           progress.clear();
           await processFile(file, config, stats);
@@ -125,7 +121,7 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
         info(`- Types modified: ${stats.typesModified}`);
         info(`- Fields modified: ${stats.fieldsModified}`);
 
-        return stats; // Return the stats object
+        return stats;
       }
     };
   });

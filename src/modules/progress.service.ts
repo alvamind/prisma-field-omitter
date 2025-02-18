@@ -10,6 +10,7 @@ export const progressService = Alvamind({ name: 'progress.service' })
             const clearLine = () => {
                 if (lastLineLength) {
                     process.stdout.write('\r' + ' '.repeat(lastLineLength) + '\r');
+                    lastLineLength = 0;
                 }
             };
 
@@ -26,14 +27,13 @@ export const progressService = Alvamind({ name: 'progress.service' })
                     lastLineLength = line.length;
 
                     if (current === total) {
+                        clearLine();
                         process.stdout.write('\n');
-                        lastLineLength = 0;
                     }
                 },
 
                 clear: () => {
-                    process.stdout.write('\r' + ' '.repeat(lastLineLength) + '\r');
-                    lastLineLength = 0;
+                    clearLine();
                 }
             };
         }
