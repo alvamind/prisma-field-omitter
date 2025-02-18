@@ -145,6 +145,7 @@ describe("CLI with JSON config", () => {
         }
     });
 
+    // prisma-field-omitter/test/cli.test.ts
     test("should process files using basic JSON config", async () => {
         const configPath = await createConfigFile("basic.json", {
             originFile: join(INPUT_DIR, "types.ts"),
@@ -173,9 +174,9 @@ describe("CLI with JSON config", () => {
         const outputFile = join(OUTPUT_DIR, "types.ts");
         console.log(`Output file path: ${outputFile}`);
         console.log(`Output directory exists: ${existsSync(OUTPUT_DIR)}`);
-        console.log(`Output file exists: ${existsSync(outputFile)}`);
 
-        expect(existsSync(outputFile)).toBe(true);
+        // Check if the output file exists *before* reading it
+        expect(existsSync(outputFile)).toBe(true); // This was failing
 
         if (existsSync(outputFile)) {
             const result = await Bun.file(outputFile).text();
