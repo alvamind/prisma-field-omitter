@@ -1,5 +1,5 @@
-import Alvamind from 'alvamind';
 import { Project, Node, PropertySignature } from "ts-morph";
+import Alvamind from 'alvamind';
 import { Glob } from "bun";
 import type { Config } from '../types';
 import { existsSync } from 'fs';
@@ -168,6 +168,20 @@ export const processorService = Alvamind({ name: 'processor.service' })
       const name = decl.getName();
       if (!name || !self.matchesPattern(name, self.getTargetPatterns(config))) return;
 
+      // Handle nested declarations in namespaces
+      if (Node.isModuleDeclaration(decl)) {
+        const body = decl.getBody();
+        if (body && Node.isModuleBlock(body)) {
+          const statements = body.getStatements();
+          statements.forEach(statement => {
+            if (Node.isTypeAliasDeclaration(statement) || Node.isInterfaceDeclaration(statement)) {
+              self.processDeclaration(statement, config, stats);
+            }
+          });
+        }
+        return;
+      }
+
       const properties = self.extractProperties(decl);
       if (properties.length === 0) return;
 
@@ -210,8 +224,12 @@ export const processorService = Alvamind({ name: 'processor.service' })
         stats.processedFiles.add(file);
         logger.info(`📝 Output: ${relativeOutputPath}`);
 
-        [...sourceFile.getTypeAliases(), ...sourceFile.getInterfaces()]
-          .forEach(decl => self.processDeclaration(decl, config, stats));
+        // Add namespace processing
+        [
+          ...sourceFile.getTypeAliases(),
+          ...sourceFile.getInterfaces(),
+          ...sourceFile.getModules() // This will get namespace declarations
+        ].forEach(decl => self.processDeclaration(decl, config, stats));
 
         await Bun.write(outputPath, sourceFile.getFullText());
         stats.filesProcessed++;

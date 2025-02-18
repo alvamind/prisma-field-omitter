@@ -51,6 +51,33 @@ export type PostData = {
 };
 `;
 
+const namespaceSample = `
+export namespace SampleTypes {
+    export type User = {
+        id: string;
+        email: string;
+        password: string;
+        createdAt: Date;
+        updatedAt: Date;
+        profile: {
+            firstName: string;
+            lastName: string;
+            dateOfBirth: Date;
+            lastLoginAt: Date;
+        };
+    };
+
+    export type Post = {
+        id: string;
+        title: string;
+        content: string;
+        authorId: string;
+        createdAt: Date;
+        updatedAt: Date;
+    };
+}
+`;
+
 describe("TypeProcessor", () => {
     beforeAll(() => {
         rmSync(TEST_DIR, { recursive: true, force: true });
@@ -74,7 +101,7 @@ describe("TypeProcessor", () => {
         console.log('Running CLI with config:', await Bun.file(configPath).text());
         console.log('CLI path:', cliPath);
 
-        // Add process.stdout.clearLine mock for tests
+        // Add process.stdout.clearLine mock for tests);
         if (!process.stdout.clearLine) {
             process.stdout.clearLine = (_dir: number) => true;
         }
@@ -222,5 +249,35 @@ describe("TypeProcessor", () => {
         expect(result).not.toContain("authorId");
         expect(result).not.toContain("password");
         expect(result).toContain("id: string");
+    });
+
+    test("should handle types within namespaces", async () => {
+        const inputFile = join(INPUT_DIR, "namespace.ts");
+        writeFileSync(inputFile, namespaceSample);
+
+        const configPath = await writeConfig({
+            originFile: inputFile,
+            outputDir: OUTPUT_DIR,
+            deleteOriginFile: false,
+            action: "delete",
+            generateOmitTypes: false,
+            hide: [{
+                field: ["*At", "password"],
+                target: "*",
+                on: "both"
+            }]
+        });
+
+        const { code } = await runCli(configPath);
+        await sleep(500);
+
+        expect(code).toBe(0);
+        const result = await Bun.file(join(OUTPUT_DIR, "namespace.ts")).text();
+        expect(result).not.toContain("createdAt: Date");
+        expect(result).not.toContain("updatedAt: Date");
+        expect(result).not.toContain("lastLoginAt: Date");
+        expect(result).not.toContain("password: string");
+        expect(result).toContain("id: string");
+        expect(result).toContain("firstName: string");
     });
 });
