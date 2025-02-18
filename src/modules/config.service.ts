@@ -22,7 +22,7 @@ export const configService: AlvamindInstance = Alvamind({ name: 'config.service'
 
       const validationErrors = validationService.validationService.validateConfig(config);
       if (validationErrors.length > 0) {
-        throw new Error('Configuration validation failed:\n' + validationErrors.join('\n'));
+        throw new Error(validationErrors.join('\n'));
       }
 
       const outputDir = resolve(process.cwd(), config.outputDir);

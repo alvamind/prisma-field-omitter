@@ -2,7 +2,7 @@ import Alvamind from 'alvamind';
 
 export const progressService = Alvamind({ name: 'progress.service' })
     .decorate('progressService', {
-        create: (total: number, label = 'Processing') => {
+        create: (total: number) => {
             let current = 0;
             const width = 40;
             let lastLineLength = 0;
@@ -19,22 +19,18 @@ export const progressService = Alvamind({ name: 'progress.service' })
                     const percentage = Math.round((current / total) * 100);
                     const filled = Math.round((width * current) / total);
                     const bar = '█'.repeat(filled) + '░'.repeat(width - filled);
-                    const line = `${label}: [${bar}] ${percentage}% (${current}/${total})`;
+                    const line = `[${bar}] ${percentage}% (${current}/${total})`;
 
                     clearLine();
                     process.stdout.write(line);
                     lastLineLength = line.length;
 
                     if (current === total) {
-                        process.stdout.write('\n');
-                        lastLineLength = 0;
+                        clearLine();
                     }
                 },
 
-                clear: () => {
-                    process.stdout.write('\r' + ' '.repeat(lastLineLength) + '\r');
-                    lastLineLength = 0;
-                }
+                clear: clearLine
             };
         }
     });

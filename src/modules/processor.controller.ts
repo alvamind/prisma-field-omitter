@@ -1,5 +1,4 @@
 import Alvamind, { AlvamindInstance } from 'alvamind';
-import { join } from "path";
 import { processorService } from './processor.service';
 import { progressService } from './progress.service';
 import { statsService, type ProcessingStats } from './stats.service';
@@ -26,7 +25,6 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
           throw new Error('Configuration validation failed:\n' + validationErrors.join('\n'));
         }
 
-        await Bun.write(join(config.outputDir, '.keep'), '');
         const stats = createStats();
 
         const files = (await getInputFiles(Array.isArray(config.originFile)
@@ -39,7 +37,7 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
           return stats;
         }
 
-        const progress = create(files.length, 'Processing files');
+        const progress = create(files.length);
         for (const file of files) {
           progress.clear();
           await processFile(file, config, stats, { info, warn });
@@ -47,10 +45,10 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
         }
 
         progress.clear();
-        info('\nProcessing completed:');
-        info(`- Files processed: ${stats.filesProcessed}`);
-        info(`- Types modified: ${stats.typesModified}`);
-        info(`- Fields modified: ${stats.fieldsModified}`);
+        info('\n✨ Processing completed:');
+        info(`📁 Files processed: ${stats.filesProcessed}`);
+        info(`🔄 Types modified: ${stats.typesModified}`);
+        info(`🎯 Fields modified: ${stats.fieldsModified}\n`);
 
         return stats;
       }

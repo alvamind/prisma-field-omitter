@@ -65,23 +65,38 @@ export const processorService = Alvamind({ name: 'processor.service' })
     },
 
     getInputFiles: async (patterns: string[]): Promise<string[]> => {
-      const fileArrays = await Promise.all(
-        patterns.map(async pattern => {
-          const results: string[] = [];
-          // Check if the pattern is a direct file path
-          if (existsSync(pattern)) {
-            results.push(pattern);
+      const seenFiles = new Set<string>();
+      const results: string[] = [];
+
+      for (const pattern of patterns) {
+        // Handle both absolute and relative paths
+        const absolutePattern = pattern.startsWith('/')
+          ? pattern
+          : join(process.cwd(), pattern);
+
+        // Check if the pattern is a direct file path
+        if (existsSync(absolutePattern)) {
+          if (!seenFiles.has(absolutePattern)) {
+            seenFiles.add(absolutePattern);
+            results.push(absolutePattern);
           }
-          // Process glob pattern even if it's a valid path to include more matches
-          for await (const file of new Glob(pattern).scan({ absolute: true })) {
-            if (!results.includes(file)) {
-              results.push(file);
-            }
+          continue;
+        }
+
+        // Process glob pattern
+        const globPattern = pattern.startsWith('/')
+          ? pattern
+          : join(process.cwd(), pattern);
+
+        for await (const file of new Glob(globPattern).scan({ absolute: true })) {
+          if (!seenFiles.has(file)) {
+            seenFiles.has(file);
+            results.push(file);
           }
-          return results;
-        })
-      );
-      return Array.from(new Set(fileArrays.flat()));
+        }
+      }
+
+      return results;
     },
 
     processNestedProperties: (
@@ -183,20 +198,30 @@ export const processorService = Alvamind({ name: 'processor.service' })
       logger: { info: (msg: string) => void, warn: (msg: string) => void }
     ) => {
       const sourceFile = self.createProject().addSourceFileAtPath(file);
-      logger.info(`Processing file: ${file}`);
-
-      [...sourceFile.getTypeAliases(), ...sourceFile.getInterfaces()]
-        .forEach(decl => self.processDeclaration(decl, config, stats));
-
       const outputPath = join(config.outputDir, basename(file));
-      await Bun.write(outputPath, sourceFile.getFullText());
-      stats.filesProcessed++;
+      const relativeOutputPath = outputPath.replace(process.cwd() + '/', '');
 
-      if (config.deleteOriginFile) {
-        try {
-          await unlink(file);
-        } catch (error) {
-          logger.warn(`Failed to delete original file: ${file}`);
+      // Process file only if we haven't processed it before
+      if (!stats.processedFiles) {
+        stats.processedFiles = new Set();
+      }
+
+      if (!stats.processedFiles.has(file)) {
+        stats.processedFiles.add(file);
+        logger.info(`📝 Output: ${relativeOutputPath}`);
+
+        [...sourceFile.getTypeAliases(), ...sourceFile.getInterfaces()]
+          .forEach(decl => self.processDeclaration(decl, config, stats));
+
+        await Bun.write(outputPath, sourceFile.getFullText());
+        stats.filesProcessed++;
+
+        if (config.deleteOriginFile) {
+          try {
+            await unlink(file);
+          } catch (error) {
+            logger.warn(`Failed to delete original file: ${file}`);
+          }
         }
       }
     }

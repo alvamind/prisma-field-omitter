@@ -29,16 +29,14 @@ export type CreatePostInput = {
 
 const createConfigFile = async (fileName: string, config: any): Promise<string> => {
     const configPath = resolve(CONFIG_DIR, fileName);
+
+    // Don't resolve paths in config, just use relative paths
     const configContent = {
         ...config,
-        // Handle originFile path conversion safely
-        originFile: config.originFile ? (
-            Array.isArray(config.originFile)
-                ? config.originFile.map((p: string) => resolve(p))
-                : resolve(config.originFile)
-        ) : undefined,
-        outputDir: resolve(config.outputDir || OUTPUT_DIR)
+        originFile: config.originFile,
+        outputDir: OUTPUT_DIR  // Use absolute path for output dir only
     };
+
     await Bun.write(configPath, JSON.stringify(configContent, null, 2));
     return configPath;
 };
@@ -148,7 +146,7 @@ describe("CLI with JSON config", () => {
     // prisma-field-omitter/test/cli.test.ts
     test("should process files using basic JSON config", async () => {
         const configPath = await createConfigFile("basic.json", {
-            originFile: join(INPUT_DIR, "types.ts"),
+            originFile: "test/cli-tmp/input/types.ts", // Use relative path
             outputDir: OUTPUT_DIR,
             deleteOriginFile: false,
             action: "comment",

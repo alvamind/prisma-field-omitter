@@ -11,17 +11,13 @@ export async function run(options: ProcessingOptions) {
     }
 
     try {
-        loggerService.loggerService.info(`Reading config from: ${options.configPath}`);
+        loggerService.loggerService.info(`📖 Reading config from: ${options.configPath}`);
         const config = await configService.configService.readConfig(options.configPath);
         if (!config) {
             throw new Error('Invalid configuration');
         }
 
         const stats = await processorController.process(config);
-
-        // Add result logging
-        loggerService.loggerService.info(`Processing completed: ${JSON.stringify(stats)}`);
-
         return stats.filesProcessed > 0;
     } catch (error: any) {
         loggerService.loggerService.error(`Error during processing: ${error}`);

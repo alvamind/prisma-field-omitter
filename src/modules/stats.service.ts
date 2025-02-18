@@ -4,6 +4,7 @@ export interface ProcessingStats {
     filesProcessed: number;
     typesModified: number;
     fieldsModified: number;
+    processedFiles?: Set<string>;
 }
 
 export const statsService = Alvamind({ name: 'stats.service' })
@@ -11,6 +12,7 @@ export const statsService = Alvamind({ name: 'stats.service' })
         createStats: (): ProcessingStats => ({
             filesProcessed: 0,
             typesModified: 0,
-            fieldsModified: 0
+            fieldsModified: 0,
+            processedFiles: new Set()
         })
     });
