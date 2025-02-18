@@ -7,11 +7,6 @@ export const progressService = Alvamind({ name: 'progress.service' })
             const width = 40;
             let lastLineLength = 0;
 
-            const clearLine = () => {
-                if (lastLineLength) {
-                    process.stdout.write('\r' + ' '.repeat(lastLineLength) + '\r');
-                }
-            };
 
             return {
                 increment: () => {
@@ -21,16 +16,16 @@ export const progressService = Alvamind({ name: 'progress.service' })
                     const bar = '█'.repeat(filled) + '░'.repeat(width - filled);
                     const line = `[${bar}] ${percentage}% (${current}/${total})`;
 
-                    clearLine();
-                    process.stdout.write(line);
+                    process.stdout.write(`\r${line}`);
                     lastLineLength = line.length;
-
-                    if (current === total) {
-                        clearLine();
-                    }
                 },
 
-                clear: clearLine
+                clear: () => {
+                    if (lastLineLength) {
+                        process.stdout.write('\r' + ' '.repeat(lastLineLength) + '\r');
+                        lastLineLength = 0;
+                    }
+                }
             };
         }
     });

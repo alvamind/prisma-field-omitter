@@ -38,10 +38,16 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
         }
 
         const progress = create(files.length);
+        info('Processing files:');
+        process.stdout.write('\n'); // Create a dedicated line for progress bar
+
         for (const file of files) {
-          progress.clear();
-          await processFile(file, config, stats, { info, warn });
-          progress.increment();
+          progress.increment(); // Update progress first
+          process.stdout.write('\n'); // Move to next line for file output
+          await processFile(file, config, stats, {
+            info: (msg) => info(msg),
+            warn
+          });
         }
 
         progress.clear();
