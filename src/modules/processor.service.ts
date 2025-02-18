@@ -3,6 +3,9 @@ import { Project, Node, PropertySignature } from "ts-morph";
 import { Glob } from "bun";
 import type { Config } from '../types';
 import { existsSync } from 'fs';
+import { unlink } from 'fs/promises';
+import { basename, join } from 'path';
+import type { ProcessingStats } from './stats.service';
 
 export const processorService = Alvamind({ name: 'processor.service' })
   .decorate('processorService', {
@@ -43,8 +46,7 @@ export const processorService = Alvamind({ name: 'processor.service' })
       typeName: string,
       config: Config,
       shouldProcessProperty: (prop: PropertySignature, typeName: string) => boolean
-    ) => {
-      let count = 0;
+    ): number => {
       const toModify = properties.filter(prop =>
         !prop.wasForgotten() &&
         Node.isPropertySignature(prop) &&
@@ -57,9 +59,9 @@ export const processorService = Alvamind({ name: 'processor.service' })
         config.action === 'delete'
           ? prop.remove()
           : prop.replaceWithText(text.split('\n').map(line => `// ${line}`).join('\n'));
-        count++;
       });
-      return count;
+
+      return toModify.length;
     },
 
     getInputFiles: async (patterns: string[]): Promise<string[]> => {
@@ -126,6 +128,77 @@ export const processorService = Alvamind({ name: 'processor.service' })
         });
       }
       return count;
+    },
+
+    extractProperties: (decl: any): PropertySignature[] => {
+      switch (true) {
+        case Node.isTypeAliasDeclaration(decl): {
+          const typeNode = decl.getTypeNode();
+          return (typeNode && Node.isTypeLiteral(typeNode))
+            ? typeNode.getProperties().filter(Node.isPropertySignature)
+            : [];
+        }
+        case Node.isInterfaceDeclaration(decl):
+          return decl.getProperties().filter(Node.isPropertySignature);
+        default:
+          return [];
+      }
+    },
+
+    processDeclaration: (
+      decl: any,
+      config: Config,
+      stats: ProcessingStats
+    ): void => {
+      const name = decl.getName();
+      if (!name || !self.matchesPattern(name, self.getTargetPatterns(config))) return;
+
+      const properties = self.extractProperties(decl);
+      if (properties.length === 0) return;
+
+      const boundShouldProcessProperty = (prop: PropertySignature, typeName: string) =>
+        self.shouldProcessProperty(prop, typeName, config);
+
+      const modifiedCount = self.processProperties(properties, name, config, boundShouldProcessProperty);
+      if (modifiedCount > 0) {
+        stats.typesModified++;
+        stats.fieldsModified += modifiedCount;
+      }
+
+      properties
+        .filter(prop => !prop.wasForgotten())
+        .forEach(prop => {
+          const typeNode = prop.getTypeNode();
+          if (typeNode && !typeNode.wasForgotten() &&
+            (Node.isTypeLiteral(typeNode) || Node.isTypeReference(typeNode))) {
+            self.processNestedProperties(typeNode, name, config);
+          }
+        });
+    },
+
+    processFile: async (
+      file: string,
+      config: Config,
+      stats: ProcessingStats,
+      logger: { info: (msg: string) => void, warn: (msg: string) => void }
+    ) => {
+      const sourceFile = self.createProject().addSourceFileAtPath(file);
+      logger.info(`Processing file: ${file}`);
+
+      [...sourceFile.getTypeAliases(), ...sourceFile.getInterfaces()]
+        .forEach(decl => self.processDeclaration(decl, config, stats));
+
+      const outputPath = join(config.outputDir, basename(file));
+      await Bun.write(outputPath, sourceFile.getFullText());
+      stats.filesProcessed++;
+
+      if (config.deleteOriginFile) {
+        try {
+          await unlink(file);
+        } catch (error) {
+          logger.warn(`Failed to delete original file: ${file}`);
+        }
+      }
     }
   });
 

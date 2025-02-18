@@ -17,14 +17,6 @@ export async function run(options: ProcessingOptions) {
             throw new Error('Invalid configuration');
         }
 
-        // Add debug logging
-        loggerService.loggerService.info(`Processing with config: ${JSON.stringify({
-            originFile: config.originFile,
-            outputDir: config.outputDir,
-            action: config.action,
-            hide: config.hide
-        })}`);
-
         const stats = await processorController.process(config);
 
         // Add result logging
