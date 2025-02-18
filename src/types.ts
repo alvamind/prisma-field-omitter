@@ -1,3 +1,12 @@
+import { TypeAliasDeclaration, InterfaceDeclaration, ModuleDeclaration } from 'ts-morph';
+
+export type ProcessableDeclaration = TypeAliasDeclaration | InterfaceDeclaration | ModuleDeclaration;
+
+export interface Logger {
+    info: (msg: string) => void;
+    warn: (msg: string) => void;
+}
+
 export interface HideRule {
     field: string | string[];
     target?: "all" | string[];

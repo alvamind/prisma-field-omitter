@@ -1,246 +1,142 @@
-import { Project, Node, PropertySignature } from "ts-morph";
 import Alvamind from 'alvamind';
-import { Glob } from "bun";
-import type { Config } from '../types';
-import { existsSync } from 'fs';
-import { unlink } from 'fs/promises';
-import { basename, join } from 'path';
-import type { ProcessingStats } from './stats.service';
+import { Config, HideRule, Logger } from '../types';
+import { ProcessingStats } from './stats.service';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs';
+import * as path from 'path';
+import { Glob } from 'bun';
 
 export const processorService = Alvamind({ name: 'processor.service' })
   .decorate('processorService', {
-    createProject: () => new Project({
-      tsConfigFilePath: "tsconfig.json",
-      skipAddingFilesFromTsConfig: true,
-    }),
+    matchesTarget(typeName: string, target: HideRule['target']): boolean {
+      if (!target) return false;
+      if (target === 'all') return true;
 
-    matchesPattern: (value: string, patterns: string[]): boolean => {
-      return patterns.some(pattern => {
-        const isNegated = pattern.startsWith('!');
-        const actualPattern = isNegated ? pattern.slice(1) : pattern;
-        const matches = new Glob(actualPattern).match(value);
-        return isNegated ? !matches : matches;
-      });
-    },
-
-    getTargetPatterns: (config: Config): string[] => {
-      return config.hide.flatMap(rule =>
-        Array.isArray(rule.target) ? rule.target :
-          rule.target === 'all' ? ['*'] : [rule.target || '*']
-      );
-    },
-
-    shouldProcessProperty: (
-      prop: PropertySignature,
-      typeName: string,
-      config: Config
-    ): boolean => {
-      return config.hide.some(rule =>
-        self.matchesPattern(typeName, self.getTargetPatterns(config)) &&
-        self.matchesPattern(prop.getName(), Array.isArray(rule.field) ? rule.field : [rule.field])
-      );
-    },
-
-    processProperties: (
-      properties: PropertySignature[],
-      typeName: string,
-      config: Config,
-      shouldProcessProperty: (prop: PropertySignature, typeName: string) => boolean
-    ): number => {
-      const toModify = properties.filter(prop =>
-        !prop.wasForgotten() &&
-        Node.isPropertySignature(prop) &&
-        shouldProcessProperty(prop, typeName)
-      );
-
-      toModify.forEach(prop => {
-        if (prop.wasForgotten()) return;
-        const text = prop.getText();
-        config.action === 'delete'
-          ? prop.remove()
-          : prop.replaceWithText(text.split('\n').map(line => `// ${line}`).join('\n'));
-      });
-
-      return toModify.length;
-    },
-
-    getInputFiles: async (patterns: string[]): Promise<string[]> => {
-      const seenFiles = new Set<string>();
-      const results: string[] = [];
-
-      for (const pattern of patterns) {
-        // Handle both absolute and relative paths
-        const absolutePattern = pattern.startsWith('/')
-          ? pattern
-          : join(process.cwd(), pattern);
-
-        // Check if the pattern is a direct file path
-        if (existsSync(absolutePattern)) {
-          if (!seenFiles.has(absolutePattern)) {
-            seenFiles.add(absolutePattern);
-            results.push(absolutePattern);
-          }
-          continue;
-        }
-
-        // Process glob pattern
-        const globPattern = pattern.startsWith('/')
-          ? pattern
-          : join(process.cwd(), pattern);
-
-        for await (const file of new Glob(globPattern).scan({ absolute: true })) {
-          if (!seenFiles.has(file)) {
-            seenFiles.has(file);
-            results.push(file);
-          }
-        }
-      }
-
-      return results;
-    },
-
-    processNestedProperties: (
-      node: Node,
-      typeName: string,
-      config: Config
-    ): number => {
-      let count = 0;
-      if (node.wasForgotten()) return count;
-
-      if (Node.isTypeLiteral(node)) {
-        const properties = node.getProperties()
-          .filter((p): p is PropertySignature => Node.isPropertySignature(p) && !p.wasForgotten());
-
-        const toModify = properties.filter(prop =>
-          !prop.wasForgotten() && self.shouldProcessProperty(prop, typeName, config)
-        );
-
-        toModify.forEach(prop => {
-          if (prop.wasForgotten()) return;
-          const text = prop.getText();
-          if (config.action === "delete") {
-            prop.remove();
-          } else {
-            prop.replaceWithText(text.split("\n").map(line => `// ${line}`).join("\n"));
-          }
-          count++;
-        });
-
-        properties.forEach(prop => {
-          if (prop.wasForgotten()) return;
-          const propTypeNode = prop.getTypeNode();
-          if (propTypeNode && !propTypeNode.wasForgotten() &&
-            (Node.isTypeLiteral(propTypeNode) || Node.isTypeReference(propTypeNode))) {
-            count += self.processNestedProperties(propTypeNode, typeName, config);
-          }
-        });
-      } else if (Node.isTypeReference(node)) {
-        const typeArgs = node.getTypeArguments();
-        typeArgs.forEach(arg => {
-          if (!arg.wasForgotten()) {
-            count += self.processNestedProperties(arg, typeName, config);
-          }
+      if (Array.isArray(target)) {
+        return target.some(pattern => {
+          const glob = new Glob(pattern);
+          return glob.match(typeName);
         });
       }
-      return count;
+      const glob = new Glob(target as string);
+      return glob.match(typeName);
     },
 
-    extractProperties: (decl: any): PropertySignature[] => {
-      switch (true) {
-        case Node.isTypeAliasDeclaration(decl): {
-          const typeNode = decl.getTypeNode();
-          return (typeNode && Node.isTypeLiteral(typeNode))
-            ? typeNode.getProperties().filter(Node.isPropertySignature)
-            : [];
-        }
-        case Node.isInterfaceDeclaration(decl):
-          return decl.getProperties().filter(Node.isPropertySignature);
-        default:
-          return [];
+    matchesField(fieldName: string, fields: string | string[]): boolean {
+      if (Array.isArray(fields)) {
+        return fields.some(fieldPattern => {
+          const glob = new Glob(fieldPattern);
+          return glob.match(fieldName);
+        });
       }
+      const glob = new Glob(fields);
+      return glob.match(fieldName);
     },
 
-    processDeclaration: (
-      decl: any,
-      config: Config,
-      stats: ProcessingStats
-    ): void => {
-      const name = decl.getName();
-      if (!name || !self.matchesPattern(name, self.getTargetPatterns(config))) return;
+    applyRule(content: string, rule: HideRule, config: Config, logger: Logger, stats: ProcessingStats): string {
+      const { field, target, on = 'both' } = rule;
+      const action = config.action || 'comment';
 
-      // Handle nested declarations in namespaces
-      if (Node.isModuleDeclaration(decl)) {
-        const body = decl.getBody();
-        if (body && Node.isModuleBlock(body)) {
-          const statements = body.getStatements();
-          statements.forEach(statement => {
-            if (Node.isTypeAliasDeclaration(statement) || Node.isInterfaceDeclaration(statement)) {
-              self.processDeclaration(statement, config, stats);
+      const lines = content.split('\n');
+      let inTargetType = false;
+      let currentTypeName: string | null = null;
+      let modifiedLines: string[] = [];
+      let typeModified = false;
+
+      for (const line of lines) {
+        const typeStartMatch = line.match(/export\s+type\s+(\w+)\s*=/);
+        if (typeStartMatch) {
+          currentTypeName = typeStartMatch[1];
+          inTargetType = self.matchesTarget(currentTypeName, target);
+        }
+
+        const typeEndMatch = line.match(/^\s*};?\s*$/);
+        if (typeEndMatch && inTargetType) {
+          if (typeModified) {
+            stats.typesModified++;
+            typeModified = false;
+          }
+          inTargetType = false;
+          currentTypeName = null;
+        }
+
+        if (inTargetType && currentTypeName) {
+          let shouldProcess = false;
+          if (on === 'both') {
+            shouldProcess = true;
+          } else if (on === 'input' && currentTypeName.includes('Input')) {
+            shouldProcess = true;
+          } else if (on === 'output' && !currentTypeName.includes('Input')) {
+            shouldProcess = true;
+          }
+
+          let modifiedLine = line;
+          if (shouldProcess) {
+            const fieldRegex = /(\s*)(\w+)\??:\s*(.+);?/;
+            const fieldMatch = modifiedLine.match(fieldRegex);
+
+            if (fieldMatch) {
+              const [, indentation, fieldName, fieldType] = fieldMatch;
+
+              if (self.matchesField(fieldName, field)) {
+                if (action === 'comment') {
+                  modifiedLine = `${indentation}//h/ ${fieldName}: ${fieldType};`;
+                } else {
+                  modifiedLine = '';
+                }
+                typeModified = true;
+                stats.fieldsModified++;
+              }
             }
-          });
-        }
-        return;
-      }
-
-      const properties = self.extractProperties(decl);
-      if (properties.length === 0) return;
-
-      const boundShouldProcessProperty = (prop: PropertySignature, typeName: string) =>
-        self.shouldProcessProperty(prop, typeName, config);
-
-      const modifiedCount = self.processProperties(properties, name, config, boundShouldProcessProperty);
-      if (modifiedCount > 0) {
-        stats.typesModified++;
-        stats.fieldsModified += modifiedCount;
-      }
-
-      properties
-        .filter(prop => !prop.wasForgotten())
-        .forEach(prop => {
-          const typeNode = prop.getTypeNode();
-          if (typeNode && !typeNode.wasForgotten() &&
-            (Node.isTypeLiteral(typeNode) || Node.isTypeReference(typeNode))) {
-            self.processNestedProperties(typeNode, name, config);
           }
-        });
+          modifiedLines.push(modifiedLine);
+        } else {
+          modifiedLines.push(line);
+        }
+      }
+
+      return modifiedLines.join('\n');
     },
 
-    processFile: async (
-      file: string,
+    async getInputFiles(patterns: string[]): Promise<string[]> {
+      const files: string[] = [];
+      for (const pattern of patterns) {
+        const glob = new Glob(pattern);
+        for await (const file of glob.scan({ cwd: process.cwd(), absolute: true })) {
+          files.push(file);
+        }
+      }
+      return files;
+    },
+
+    async processFile(
+      filePath: string,
       config: Config,
       stats: ProcessingStats,
-      logger: { info: (msg: string) => void, warn: (msg: string) => void }
-    ) => {
-      const sourceFile = self.createProject().addSourceFileAtPath(file);
-      const outputPath = join(config.outputDir, basename(file));
-      const relativeOutputPath = outputPath.replace(process.cwd() + '/', '');
+      logger: Logger
+    ): Promise<void> {
+      try {
+        let content = readFileSync(filePath, 'utf-8');
+        const originalContent = content;
 
-      // Process file only if we haven't processed it before
-      if (!stats.processedFiles) {
-        stats.processedFiles = new Set();
-      }
-
-      if (!stats.processedFiles.has(file)) {
-        stats.processedFiles.add(file);
-        logger.info(`📝 Output: ${relativeOutputPath}`);
-
-        // Add namespace processing
-        [
-          ...sourceFile.getTypeAliases(),
-          ...sourceFile.getInterfaces(),
-          ...sourceFile.getModules() // This will get namespace declarations
-        ].forEach(decl => self.processDeclaration(decl, config, stats));
-
-        await Bun.write(outputPath, sourceFile.getFullText());
-        stats.filesProcessed++;
-
-        if (config.deleteOriginFile) {
-          try {
-            await unlink(file);
-          } catch (error) {
-            logger.warn(`Failed to delete original file: ${file}`);
-          }
+        for (const rule of config.hide) {
+          content = self.applyRule(content, rule, config, logger, stats);
         }
+
+        if (content !== originalContent) {
+          const outputFilePath = path.join(
+            config.outputDir,
+            path.relative(path.dirname(Array.isArray(config.originFile) ? config.originFile[0] : config.originFile), filePath)
+          );
+
+          // Ensure output directory exists
+          mkdirSync(path.dirname(outputFilePath), { recursive: true });
+
+          writeFileSync(outputFilePath, content, 'utf-8');
+          stats.filesProcessed++;
+          logger.info(`Processed: ${path.basename(filePath)}`);
+        }
+      } catch (error) {
+        logger.warn(`Error processing file ${filePath}: ${(error as any).message}`);
       }
     }
   });

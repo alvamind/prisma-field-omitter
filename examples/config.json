@@ -1,19 +1,17 @@
 {
-    "originFile": "./examples/sample-types.ts",
-    "outputDir": "./examples/output",
-    "deleteOriginFile": false,
-    "action": "comment",
-    "generateOmitTypes": true,
-    "generatedOmitTypesOutputPath": "./examples/output/omit-types.ts",
-    "hide": [
-        {
-            "field": [
-                "*At",
-                "password",
-                "*Id"
-            ],
-            "target": "all",
-            "on": "both"
-        }
-    ]
+  "originFile": "./examples/index.d.ts",
+  "outputDir": "./examples/output",
+  "deleteOriginFile": false,
+  "action": "comment",
+  "generateOmitTypes": true,
+  "generatedOmitTypesOutputPath": "./examples/output/omit-types.ts",
+  "hide": [
+    {
+      "field": [
+        "*At"
+      ],
+      "target": "all",
+      "on": "both"
+    }
+  ]
 }
