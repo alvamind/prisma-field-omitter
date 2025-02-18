@@ -11,19 +11,13 @@ export const processorService = Alvamind({ name: 'processor.service' })
       skipAddingFilesFromTsConfig: true,
     }),
 
-    matchesPattern: (value: string, patterns: string[], patternCache: Map<string, boolean>): boolean => {
+    matchesPattern: (value: string, patterns: string[]): boolean => {
       return patterns.some(pattern => {
         const isNegated = pattern.startsWith('!');
         const actualPattern = isNegated ? pattern.slice(1) : pattern;
-        const matches = self.getCachedPattern(value, actualPattern, patternCache);
+        const matches = new Glob(actualPattern).match(value);
         return isNegated ? !matches : matches;
       });
-    },
-
-    getCachedPattern: (key: string, pattern: string, cache: Map<string, boolean>): boolean => {
-      const cacheKey = `${key}:${pattern}`;
-      return cache.get(cacheKey) ??
-        cache.set(cacheKey, new Glob(pattern).match(key)).get(cacheKey)!;
     },
 
     getTargetPatterns: (config: Config): string[] => {
@@ -36,12 +30,11 @@ export const processorService = Alvamind({ name: 'processor.service' })
     shouldProcessProperty: (
       prop: PropertySignature,
       typeName: string,
-      config: Config,
-      patternCache: Map<string, boolean>
+      config: Config
     ): boolean => {
       return config.hide.some(rule =>
-        self.matchesPattern(typeName, self.getTargetPatterns(config), patternCache) &&
-        self.matchesPattern(prop.getName(), Array.isArray(rule.field) ? rule.field : [rule.field], patternCache)
+        self.matchesPattern(typeName, self.getTargetPatterns(config)) &&
+        self.matchesPattern(prop.getName(), Array.isArray(rule.field) ? rule.field : [rule.field])
       );
     },
 
@@ -89,8 +82,7 @@ export const processorService = Alvamind({ name: 'processor.service' })
     processNestedProperties: (
       node: Node,
       typeName: string,
-      config: Config,
-      patternCache: Map<string, boolean>
+      config: Config
     ): void => {
       if (node.wasForgotten()) return;
 
@@ -99,7 +91,7 @@ export const processorService = Alvamind({ name: 'processor.service' })
           .filter((p): p is PropertySignature => Node.isPropertySignature(p) && !p.wasForgotten());
 
         const toModify = properties.filter(prop =>
-          !prop.wasForgotten() && self.shouldProcessProperty(prop, typeName, config, patternCache)
+          !prop.wasForgotten() && self.shouldProcessProperty(prop, typeName, config)
         );
 
         toModify.forEach(prop => {
@@ -114,7 +106,7 @@ export const processorService = Alvamind({ name: 'processor.service' })
           if (prop.wasForgotten()) return;
           const propTypeNode = prop.getTypeNode();
           if (propTypeNode && !propTypeNode.wasForgotten()) {
-            self.processNestedProperties(propTypeNode, typeName, config, patternCache);
+            self.processNestedProperties(propTypeNode, typeName, config);
           }
         });
       }

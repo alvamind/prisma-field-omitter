@@ -12,8 +12,12 @@ export async function run(options: ProcessingOptions) {
 
     try {
         const config = await configService.configService.readConfig(options.configPath);
-        await processorController.process(config);
-        return true;
+        if (!config) {
+            throw new Error('Invalid configuration');
+        }
+
+        const stats = await processorController.process(config);
+        return stats.filesProcessed > 0; // Return true if any files were processed
     } catch (error: any) {
         loggerService.loggerService.error('Error during processing:', error);
         throw error;

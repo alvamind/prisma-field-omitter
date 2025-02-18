@@ -1,5 +1,6 @@
 import Alvamind, { AlvamindInstance } from 'alvamind';
-import { existsSync, mkdirSync } from 'fs';
+import { mkdirSync } from 'fs';
+import { resolve } from 'path';
 import type { Config } from '../types';
 import { validationService } from './validation.service';
 
@@ -23,10 +24,9 @@ export const configService: AlvamindInstance = Alvamind({ name: 'config.service'
         throw new Error('Configuration validation failed:\n' + validationErrors.join('\n'));
       }
 
-      // Ensure outputDir exists
-      if (!existsSync(config.outputDir)) {
-        mkdirSync(config.outputDir, { recursive: true });
-      }
+      const outputDir = resolve(process.cwd(), config.outputDir);
+      mkdirSync(outputDir, { recursive: true });
+      config.outputDir = outputDir;
 
       return config;
     }

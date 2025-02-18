@@ -32,7 +32,8 @@ export const progressService = Alvamind({ name: 'progress.service' })
                 },
 
                 clear: () => {
-                    clearLine();
+                    process.stdout.write('\r' + ' '.repeat(lastLineLength) + '\r');
+                    lastLineLength = 0;
                 }
             };
         }
