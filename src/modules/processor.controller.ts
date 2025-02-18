@@ -33,7 +33,6 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
         ...sourceFile.getClasses(),
       ];
 
-      let modified = false;
       for (const decl of declarations) {
         const name = decl.getName();
         if (!name) continue; // Skip declarations without names
@@ -54,7 +53,6 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
           shouldProcessProperty(prop, name, config));
 
         if (modifiedProperties.length > 0) {
-          modified = true;
           stats.typesModified++;
           stats.fieldsModified += modifiedProperties.length;
 
@@ -66,27 +64,31 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
               prop.replaceWithText(text.split('\n').map(line => `// ${line}`).join('\n'));
             }
           });
-
-          properties.forEach(prop => {
-            if (prop.wasForgotten()) return;
-            const propTypeNode = prop.getTypeNode();
-            if (propTypeNode && !propTypeNode.wasForgotten() && Node.isTypeLiteral(propTypeNode)) {
-              processNestedProperties(propTypeNode, name, config);
-            }
-          });
         }
+
+        // Process nested properties without checking a "modified" flag
+        properties.forEach(prop => {
+          if (prop.wasForgotten()) return;
+          const propTypeNode = prop.getTypeNode();
+          if (propTypeNode && !propTypeNode.wasForgotten() && (Node.isTypeLiteral(propTypeNode) || Node.isTypeReference(propTypeNode))) {
+            processNestedProperties(propTypeNode, name, config);
+          }
+        });
       }
 
       const outputPath = join(config.outputDir, basename(file));
       info(`Writing output to: ${outputPath}`);
-      if (modified) {
-        await Bun.write(outputPath, sourceFile.getFullText());
-        stats.filesProcessed++;
-      }
 
-      if (modified && config.deleteOriginFile) {
-        await Bun.write(file, '');
-        await unlink(file);
+      // Always write the file
+      await Bun.write(outputPath, sourceFile.getFullText());
+      stats.filesProcessed++;
+
+      if (config.deleteOriginFile) {
+        try {
+          await unlink(file);
+        } catch (error) {
+          warn(`Failed to delete original file: ${file}`);
+        }
       }
     };
 
@@ -96,6 +98,9 @@ export const processorController: AlvamindInstance = Alvamind({ name: 'processor
         if (validationErrors.length > 0) {
           throw new Error('Configuration validation failed:\n' + validationErrors.join('\n'));
         }
+
+        // Ensure output directory exists
+        await Bun.write(join(config.outputDir, '.keep'), '');
 
         const stats = createStats();
         const inputPatterns = Array.isArray(config.originFile) ? config.originFile : [config.originFile];

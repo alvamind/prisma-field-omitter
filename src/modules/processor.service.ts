@@ -83,8 +83,9 @@ export const processorService = Alvamind({ name: 'processor.service' })
       node: Node,
       typeName: string,
       config: Config
-    ): void => {
-      if (node.wasForgotten()) return;
+    ): number => {
+      let count = 0;
+      if (node.wasForgotten()) return count;
 
       if (Node.isTypeLiteral(node)) {
         const properties = node.getProperties()
@@ -97,19 +98,31 @@ export const processorService = Alvamind({ name: 'processor.service' })
         toModify.forEach(prop => {
           if (prop.wasForgotten()) return;
           const text = prop.getText();
-          config.action === "delete"
-            ? prop.remove()
-            : prop.replaceWithText(text.split("\n").map(line => `// ${line}`).join("\n"));
+          if (config.action === "delete") {
+            prop.remove();
+          } else {
+            prop.replaceWithText(text.split("\n").map(line => `// ${line}`).join("\n"));
+          }
+          count++;
         });
 
         properties.forEach(prop => {
           if (prop.wasForgotten()) return;
           const propTypeNode = prop.getTypeNode();
-          if (propTypeNode && !propTypeNode.wasForgotten()) {
-            self.processNestedProperties(propTypeNode, typeName, config);
+          if (propTypeNode && !propTypeNode.wasForgotten() &&
+            (Node.isTypeLiteral(propTypeNode) || Node.isTypeReference(propTypeNode))) {
+            count += self.processNestedProperties(propTypeNode, typeName, config);
+          }
+        });
+      } else if (Node.isTypeReference(node)) {
+        const typeArgs = node.getTypeArguments();
+        typeArgs.forEach(arg => {
+          if (!arg.wasForgotten()) {
+            count += self.processNestedProperties(arg, typeName, config);
           }
         });
       }
+      return count;
     }
   });
 

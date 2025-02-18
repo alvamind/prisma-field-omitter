@@ -67,11 +67,59 @@ describe("TypeProcessor", () => {
         mkdirSync(OUTPUT_DIR, { recursive: true });
     });
 
+    const runCli = async (configPath: string): Promise<{ code: number, output: string }> => {
+        const cliPath = resolve(import.meta.dir, '..', 'src', 'cli.ts');
+
+        // Add debug logging
+        console.log('Running CLI with config:', await Bun.file(configPath).text());
+        console.log('CLI path:', cliPath);
+
+        // Add process.stdout.clearLine mock for tests
+        if (!process.stdout.clearLine) {
+            process.stdout.clearLine = (_dir: number) => true;
+        }
+
+        const proc = Bun.spawn(['bun', 'run', cliPath, '--config', configPath], {
+            stdout: 'pipe',
+            stderr: 'pipe',
+            env: { ...process.env, NODE_ENV: 'test' }
+        });
+
+        const output = await new Response(proc.stdout).text();
+        const error = await new Response(proc.stderr).text();
+        const exitCode = await proc.exited;
+
+        // Add debug output
+        console.log('CLI Output:', output);
+        if (error) console.log('CLI Error:', error);
+        console.log('Exit code:', exitCode);
+
+        return {
+            code: exitCode,
+            output: output + error
+        };
+    };
+
+    const writeConfig = async (config: any): Promise<string> => {
+        const configPath = join(TEST_DIR, `config-${Date.now()}.json`);
+        // Ensure paths are absolute
+        const configContent = {
+            ...config,
+            originFile: resolve(config.originFile),
+            outputDir: resolve(config.outputDir)
+        };
+        await Bun.write(configPath, JSON.stringify(configContent, null, 2));
+        return configPath;
+    };
+
+    // Add sleep utility for file operations
+    const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
     test("should handle nested input types", async () => {
         const inputFile = join(INPUT_DIR, "nested.ts");
         writeFileSync(inputFile, nestedTypeSample);
 
-        const config = {
+        const configPath = await writeConfig({
             originFile: inputFile,
             outputDir: OUTPUT_DIR,
             deleteOriginFile: false,
@@ -82,9 +130,12 @@ describe("TypeProcessor", () => {
                 target: "all",
                 on: "both"
             }]
-        };
+        });
 
-        // Add implementation here
+        const { code } = await runCli(configPath);
+        await sleep(500); // Add delay for file operations
+
+        expect(code).toBe(0);
         const result = await Bun.file(join(OUTPUT_DIR, "nested.ts")).text();
         expect(result).toContain("// createdAt: Date");
         expect(result).toContain("// updatedAt: Date");
@@ -96,7 +147,7 @@ describe("TypeProcessor", () => {
         const inputFile = join(INPUT_DIR, "to-delete.ts");
         writeFileSync(inputFile, nestedTypeSample);
 
-        const config = {
+        const configPath = await writeConfig({
             originFile: inputFile,
             outputDir: OUTPUT_DIR,
             deleteOriginFile: true,
@@ -107,9 +158,12 @@ describe("TypeProcessor", () => {
                 target: "all",
                 on: "both"
             }]
-        };
+        });
 
-        // Add implementation here
+        const { code } = await runCli(configPath);
+        await sleep(500); // Add delay for file operations
+
+        expect(code).toBe(0);
         expect(existsSync(inputFile)).toBe(false);
         expect(existsSync(join(OUTPUT_DIR, "to-delete.ts"))).toBe(true);
     });
@@ -118,7 +172,7 @@ describe("TypeProcessor", () => {
         const inputFile = join(INPUT_DIR, "complex.ts");
         writeFileSync(inputFile, nestedTypeSample);
 
-        const config = {
+        const configPath = await writeConfig({
             originFile: inputFile,
             outputDir: OUTPUT_DIR,
             deleteOriginFile: false,
@@ -129,9 +183,12 @@ describe("TypeProcessor", () => {
                 target: "ComplexType",
                 on: "both"
             }]
-        };
+        });
 
-        // Add implementation here
+        const { code } = await runCli(configPath);
+        await sleep(500); // Add delay for file operations
+
+        expect(code).toBe(0);
         const result = await Bun.file(join(OUTPUT_DIR, "complex.ts")).text();
         expect(result).not.toContain("createdAt: Date");
         expect(result).not.toContain("updatedAt: Date");
@@ -142,7 +199,7 @@ describe("TypeProcessor", () => {
         const inputFile = join(INPUT_DIR, "multi-glob.ts");
         writeFileSync(inputFile, multipleGlobSample);
 
-        const config = {
+        const configPath = await writeConfig({
             originFile: inputFile,
             outputDir: OUTPUT_DIR,
             deleteOriginFile: false,
@@ -153,9 +210,12 @@ describe("TypeProcessor", () => {
                 target: "*Data",
                 on: "both"
             }]
-        };
+        });
 
-        // Add implementation here
+        const { code } = await runCli(configPath);
+        await sleep(500); // Add delay for file operations
+
+        expect(code).toBe(0);
         const result = await Bun.file(join(OUTPUT_DIR, "multi-glob.ts")).text();
         expect(result).not.toContain("createdAt");
         expect(result).not.toContain("updatedAt");

@@ -10,6 +10,12 @@ export const validationService = Alvamind({ name: 'validation.service' })
             return false;
         },
 
+        isValidTarget(value: unknown): boolean {
+            if (typeof value === 'string') return true;
+            if (Array.isArray(value)) return value.every(item => typeof item === 'string');
+            return false;
+        },
+
         validateConfig(config: Config): string[] {
             const errors: string[] = [];
 
@@ -41,8 +47,8 @@ export const validationService = Alvamind({ name: 'validation.service' })
                     }
 
                     // Validate target format
-                    if (rule.target && rule.target !== 'all' && !Array.isArray(rule.target)) {
-                        errors.push(`Hide rule #${index + 1}: target must be 'all' or array of patterns`);
+                    if (rule.target && !self.isValidTarget(rule.target)) {
+                        errors.push(`Hide rule #${index + 1}: target must be a string pattern or array of patterns`);
                     }
 
                     // Validate on enum

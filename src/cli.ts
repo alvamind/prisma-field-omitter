@@ -11,15 +11,30 @@ export async function run(options: ProcessingOptions) {
     }
 
     try {
+        loggerService.loggerService.info(`Reading config from: ${options.configPath}`);
         const config = await configService.configService.readConfig(options.configPath);
         if (!config) {
             throw new Error('Invalid configuration');
         }
 
+        // Add debug logging
+        loggerService.loggerService.info(`Processing with config: ${JSON.stringify({
+            originFile: config.originFile,
+            outputDir: config.outputDir,
+            action: config.action,
+            hide: config.hide
+        })}`);
+
         const stats = await processorController.process(config);
-        return stats.filesProcessed > 0; // Return true if any files were processed
+
+        // Add result logging
+        loggerService.loggerService.info(`Processing completed: ${JSON.stringify(stats)}`);
+
+        return stats.filesProcessed > 0;
     } catch (error: any) {
-        loggerService.loggerService.error('Error during processing:', error);
+        loggerService.loggerService.error(`Error during processing: ${error}`);
+        // Ensure error is propagated
+        process.exitCode = 1;
         throw error;
     }
 }
@@ -46,7 +61,7 @@ if (import.meta.main) { // Use import.meta.main for ESM
     };
 
     run(options).catch((error) => {
-        loggerService.loggerService.error('Fatal error:', error);
+        loggerService.loggerService.error(`Fatal error: ${error}`);
         process.exit(1);
     });
 }
