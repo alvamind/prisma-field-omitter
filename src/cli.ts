@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S bun --bun
 
 import type { ProcessingOptions } from "./types";
 import { processorController } from "./modules/processor.controller";
@@ -21,7 +21,7 @@ export async function run(options: ProcessingOptions) {
 }
 
 // CLI execution handler
-if (require.main === module) {
+if (import.meta.main) { // Use import.meta.main for ESM
     const args = process.argv.slice(2);
     const configIndex = args.indexOf('--config');
 
