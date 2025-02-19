@@ -7,7 +7,7 @@ import { Glob } from 'bun';
 
 export const processorService = Alvamind({ name: 'processor.service' })
   .decorate('processorService', {
-    matchesTarget(typeName: string, target: HideRule['target']): boolean {
+    matchesTarget(typeName: string, target: string | string[] | "all" | undefined): boolean {
       if (!target) return false;
       if (target === 'all') return true;
 
@@ -17,7 +17,7 @@ export const processorService = Alvamind({ name: 'processor.service' })
           return glob.match(typeName);
         });
       }
-      const glob = new Glob(target as string);
+      const glob = new Glob(target);
       return glob.match(typeName);
     },
 

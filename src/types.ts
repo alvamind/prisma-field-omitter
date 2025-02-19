@@ -9,7 +9,7 @@ export interface Logger {
 
 export interface HideRule {
     field: string | string[];
-    target?: "all" | string[];
+    target?: string | string[] | "all";
     on?: "input" | "output" | "both";
 }
 

@@ -11,6 +11,7 @@ export const validationService = Alvamind({ name: 'validation.service' })
         },
 
         isValidTarget(value: unknown): boolean {
+            if (value === 'all') return true;
             if (typeof value === 'string') return true;
             if (Array.isArray(value)) return value.every(item => typeof item === 'string');
             return false;
