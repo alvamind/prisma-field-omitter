@@ -1347,24 +1347,24 @@ export namespace Prisma {
   };
   export type ContentMinAggregateOutputType = {
     id: number | null
-    //h/ createdAt: Date | null;
-    //h/ updatedAt: Date | null;
+    createdAt: Date | null
+    updatedAt: Date | null
     published: boolean | null
     ownerId: number | null
     contentType: $Enums.ContentTypeDelegate | null
   };
   export type ContentMaxAggregateOutputType = {
     id: number | null
-    //h/ createdAt: Date | null;
-    //h/ updatedAt: Date | null;
+    createdAt: Date | null
+    updatedAt: Date | null
     published: boolean | null
     ownerId: number | null
     contentType: $Enums.ContentTypeDelegate | null
   };
   export type ContentCountAggregateOutputType = {
     id: number
-    //h/ createdAt: number;
-    //h/ updatedAt: number;
+    createdAt: number
+    updatedAt: number
     published: number
     ownerId: number
     contentType: number
@@ -1380,24 +1380,24 @@ export namespace Prisma {
   };
   export type ContentMinAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
   };
   export type ContentMaxAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
   };
   export type ContentCountAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
@@ -1437,8 +1437,8 @@ export namespace Prisma {
   };
   export type ContentGroupByOutputType = {
     id: number
-    //h/ createdAt: Date;
-    //h/ updatedAt: Date;
+    createdAt: Date
+    updatedAt: Date
     published: boolean
     ownerId: number
     contentType: $Enums.ContentTypeDelegate
@@ -1489,8 +1489,8 @@ export namespace Prisma {
   }, ExtArgs["result"]["content"]>;
   export type ContentSelectScalar = {
     id?: boolean
-    //h/ createdAt: boolean;
-    //h/ updatedAt: boolean;
+    createdAt?: boolean
+    updatedAt?: boolean
     published?: boolean
     ownerId?: boolean
     contentType?: boolean
@@ -1630,8 +1630,8 @@ export namespace Prisma {
   };
   export type PostMinAggregateOutputType = {
     id: number | null
-    //h/ createdAt: Date | null;
-    //h/ updatedAt: Date | null;
+    createdAt: Date | null
+    updatedAt: Date | null
     published: boolean | null
     ownerId: number | null
     contentType: $Enums.ContentTypeDelegate | null
@@ -1639,8 +1639,8 @@ export namespace Prisma {
   };
   export type PostMaxAggregateOutputType = {
     id: number | null
-    //h/ createdAt: Date | null;
-    //h/ updatedAt: Date | null;
+    createdAt: Date | null
+    updatedAt: Date | null
     published: boolean | null
     ownerId: number | null
     contentType: $Enums.ContentTypeDelegate | null
@@ -1648,8 +1648,8 @@ export namespace Prisma {
   };
   export type PostCountAggregateOutputType = {
     id: number
-    //h/ createdAt: number;
-    //h/ updatedAt: number;
+    createdAt: number
+    updatedAt: number
     published: number
     ownerId: number
     contentType: number
@@ -1666,8 +1666,8 @@ export namespace Prisma {
   };
   export type PostMinAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
@@ -1675,8 +1675,8 @@ export namespace Prisma {
   };
   export type PostMaxAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
@@ -1684,8 +1684,8 @@ export namespace Prisma {
   };
   export type PostCountAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
@@ -1726,8 +1726,8 @@ export namespace Prisma {
   };
   export type PostGroupByOutputType = {
     id: number
-    //h/ createdAt: Date;
-    //h/ updatedAt: Date;
+    createdAt: Date
+    updatedAt: Date
     published: boolean
     ownerId: number
     contentType: $Enums.ContentTypeDelegate
@@ -1782,8 +1782,8 @@ export namespace Prisma {
   }, ExtArgs["result"]["post"]>;
   export type PostSelectScalar = {
     id?: boolean
-    //h/ createdAt: boolean;
-    //h/ updatedAt: boolean;
+    createdAt?: boolean
+    updatedAt?: boolean
     published?: boolean
     ownerId?: boolean
     contentType?: boolean
@@ -1941,8 +1941,8 @@ export namespace Prisma {
   };
   export type VideoMinAggregateOutputType = {
     id: number | null
-    //h/ createdAt: Date | null;
-    //h/ updatedAt: Date | null;
+    createdAt: Date | null
+    updatedAt: Date | null
     published: boolean | null
     ownerId: number | null
     contentType: $Enums.ContentTypeDelegate | null
@@ -1951,8 +1951,8 @@ export namespace Prisma {
   };
   export type VideoMaxAggregateOutputType = {
     id: number | null
-    //h/ createdAt: Date | null;
-    //h/ updatedAt: Date | null;
+    createdAt: Date | null
+    updatedAt: Date | null
     published: boolean | null
     ownerId: number | null
     contentType: $Enums.ContentTypeDelegate | null
@@ -1961,8 +1961,8 @@ export namespace Prisma {
   };
   export type VideoCountAggregateOutputType = {
     id: number
-    //h/ createdAt: number;
-    //h/ updatedAt: number;
+    createdAt: number
+    updatedAt: number
     published: number
     ownerId: number
     contentType: number
@@ -1982,8 +1982,8 @@ export namespace Prisma {
   };
   export type VideoMinAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
@@ -1992,8 +1992,8 @@ export namespace Prisma {
   };
   export type VideoMaxAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
@@ -2002,8 +2002,8 @@ export namespace Prisma {
   };
   export type VideoCountAggregateInputType = {
     id?: true
-    //h/ createdAt: true;
-    //h/ updatedAt: true;
+    createdAt?: true
+    updatedAt?: true
     published?: true
     ownerId?: true
     contentType?: true
@@ -2045,8 +2045,8 @@ export namespace Prisma {
   };
   export type VideoGroupByOutputType = {
     id: number
-    //h/ createdAt: Date;
-    //h/ updatedAt: Date;
+    createdAt: Date
+    updatedAt: Date
     published: boolean
     ownerId: number
     contentType: $Enums.ContentTypeDelegate
@@ -2105,8 +2105,8 @@ export namespace Prisma {
   }, ExtArgs["result"]["video"]>;
   export type VideoSelectScalar = {
     id?: boolean
-    //h/ createdAt: boolean;
-    //h/ updatedAt: boolean;
+    createdAt?: boolean
+    updatedAt?: boolean
     published?: boolean
     ownerId?: boolean
     contentType?: boolean
@@ -2296,8 +2296,8 @@ export namespace Prisma {
     OR?: ContentWhereInput[]
     NOT?: ContentWhereInput | ContentWhereInput[]
     id?: IntFilter<"Content"> | number
-    //h/ createdAt: DateTimeFilter<"Content"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Content"> | Date | string;
+    createdAt?: DateTimeFilter<"Content"> | Date | string
+    updatedAt?: DateTimeFilter<"Content"> | Date | string
     published?: BoolFilter<"Content"> | boolean
     ownerId?: IntFilter<"Content"> | number
     contentType?: EnumContentTypeDelegateFilter<"Content"> | $Enums.ContentTypeDelegate
@@ -2305,8 +2305,8 @@ export namespace Prisma {
   };
   export type ContentOrderByWithRelationInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2317,8 +2317,8 @@ export namespace Prisma {
     AND?: ContentWhereInput | ContentWhereInput[]
     OR?: ContentWhereInput[]
     NOT?: ContentWhereInput | ContentWhereInput[]
-    //h/ createdAt: DateTimeFilter<"Content"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Content"> | Date | string;
+    createdAt?: DateTimeFilter<"Content"> | Date | string
+    updatedAt?: DateTimeFilter<"Content"> | Date | string
     published?: BoolFilter<"Content"> | boolean
     ownerId?: IntFilter<"Content"> | number
     contentType?: EnumContentTypeDelegateFilter<"Content"> | $Enums.ContentTypeDelegate
@@ -2326,8 +2326,8 @@ export namespace Prisma {
   }, "id">;
   export type ContentOrderByWithAggregationInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2342,8 +2342,8 @@ export namespace Prisma {
     OR?: ContentScalarWhereWithAggregatesInput[]
     NOT?: ContentScalarWhereWithAggregatesInput | ContentScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"Content"> | number
-    //h/ createdAt: DateTimeWithAggregatesFilter<"Content"> | Date | string;
-    //h/ updatedAt: DateTimeWithAggregatesFilter<"Content"> | Date | string;
+    createdAt?: DateTimeWithAggregatesFilter<"Content"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Content"> | Date | string
     published?: BoolWithAggregatesFilter<"Content"> | boolean
     ownerId?: IntWithAggregatesFilter<"Content"> | number
     contentType?: EnumContentTypeDelegateWithAggregatesFilter<"Content"> | $Enums.ContentTypeDelegate
@@ -2353,8 +2353,8 @@ export namespace Prisma {
     OR?: PostWhereInput[]
     NOT?: PostWhereInput | PostWhereInput[]
     id?: IntFilter<"Post"> | number
-    //h/ createdAt: DateTimeFilter<"Post"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Post"> | Date | string;
+    createdAt?: DateTimeFilter<"Post"> | Date | string
+    updatedAt?: DateTimeFilter<"Post"> | Date | string
     published?: BoolFilter<"Post"> | boolean
     ownerId?: IntFilter<"Post"> | number
     contentType?: EnumContentTypeDelegateFilter<"Post"> | $Enums.ContentTypeDelegate
@@ -2363,8 +2363,8 @@ export namespace Prisma {
   };
   export type PostOrderByWithRelationInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2376,8 +2376,8 @@ export namespace Prisma {
     AND?: PostWhereInput | PostWhereInput[]
     OR?: PostWhereInput[]
     NOT?: PostWhereInput | PostWhereInput[]
-    //h/ createdAt: DateTimeFilter<"Post"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Post"> | Date | string;
+    createdAt?: DateTimeFilter<"Post"> | Date | string
+    updatedAt?: DateTimeFilter<"Post"> | Date | string
     published?: BoolFilter<"Post"> | boolean
     ownerId?: IntFilter<"Post"> | number
     contentType?: EnumContentTypeDelegateFilter<"Post"> | $Enums.ContentTypeDelegate
@@ -2386,8 +2386,8 @@ export namespace Prisma {
   }, "id">;
   export type PostOrderByWithAggregationInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2403,8 +2403,8 @@ export namespace Prisma {
     OR?: PostScalarWhereWithAggregatesInput[]
     NOT?: PostScalarWhereWithAggregatesInput | PostScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"Post"> | number
-    //h/ createdAt: DateTimeWithAggregatesFilter<"Post"> | Date | string;
-    //h/ updatedAt: DateTimeWithAggregatesFilter<"Post"> | Date | string;
+    createdAt?: DateTimeWithAggregatesFilter<"Post"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Post"> | Date | string
     published?: BoolWithAggregatesFilter<"Post"> | boolean
     ownerId?: IntWithAggregatesFilter<"Post"> | number
     contentType?: EnumContentTypeDelegateWithAggregatesFilter<"Post"> | $Enums.ContentTypeDelegate
@@ -2415,8 +2415,8 @@ export namespace Prisma {
     OR?: VideoWhereInput[]
     NOT?: VideoWhereInput | VideoWhereInput[]
     id?: IntFilter<"Video"> | number
-    //h/ createdAt: DateTimeFilter<"Video"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Video"> | Date | string;
+    createdAt?: DateTimeFilter<"Video"> | Date | string
+    updatedAt?: DateTimeFilter<"Video"> | Date | string
     published?: BoolFilter<"Video"> | boolean
     ownerId?: IntFilter<"Video"> | number
     contentType?: EnumContentTypeDelegateFilter<"Video"> | $Enums.ContentTypeDelegate
@@ -2426,8 +2426,8 @@ export namespace Prisma {
   };
   export type VideoOrderByWithRelationInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2440,8 +2440,8 @@ export namespace Prisma {
     AND?: VideoWhereInput | VideoWhereInput[]
     OR?: VideoWhereInput[]
     NOT?: VideoWhereInput | VideoWhereInput[]
-    //h/ createdAt: DateTimeFilter<"Video"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Video"> | Date | string;
+    createdAt?: DateTimeFilter<"Video"> | Date | string
+    updatedAt?: DateTimeFilter<"Video"> | Date | string
     published?: BoolFilter<"Video"> | boolean
     ownerId?: IntFilter<"Video"> | number
     contentType?: EnumContentTypeDelegateFilter<"Video"> | $Enums.ContentTypeDelegate
@@ -2451,8 +2451,8 @@ export namespace Prisma {
   }, "id">;
   export type VideoOrderByWithAggregationInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2469,8 +2469,8 @@ export namespace Prisma {
     OR?: VideoScalarWhereWithAggregatesInput[]
     NOT?: VideoScalarWhereWithAggregatesInput | VideoScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"Video"> | number
-    //h/ createdAt: DateTimeWithAggregatesFilter<"Video"> | Date | string;
-    //h/ updatedAt: DateTimeWithAggregatesFilter<"Video"> | Date | string;
+    createdAt?: DateTimeWithAggregatesFilter<"Video"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"Video"> | Date | string
     published?: BoolWithAggregatesFilter<"Video"> | boolean
     ownerId?: IntWithAggregatesFilter<"Video"> | number
     contentType?: EnumContentTypeDelegateWithAggregatesFilter<"Video"> | $Enums.ContentTypeDelegate
@@ -2500,105 +2500,105 @@ export namespace Prisma {
     id?: IntFieldUpdateOperationsInput | number
   };
   export type ContentCreateInput = {
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     owner: UserCreateNestedOneWithoutContentsInput
   };
   export type ContentUncheckedCreateInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     ownerId: number
   };
   export type ContentUpdateInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     owner?: UserUpdateOneRequiredWithoutContentsNestedInput
   };
   export type ContentUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     ownerId?: IntFieldUpdateOperationsInput | number
   };
   export type ContentCreateManyInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     ownerId: number
   };
   export type ContentUpdateManyMutationInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
   };
   export type ContentUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     ownerId?: IntFieldUpdateOperationsInput | number
   };
   export type PostCreateInput = {
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     title: string
     owner: UserCreateNestedOneWithoutDelegate_aux_User_contents_PostInput
   };
   export type PostUncheckedCreateInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     ownerId: number
     title: string
   };
   export type PostUpdateInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     title?: StringFieldUpdateOperationsInput | string
     owner?: UserUpdateOneRequiredWithoutDelegate_aux_User_contents_PostNestedInput
   };
   export type PostUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     ownerId?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
   };
   export type PostCreateManyInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     ownerId: number
     title: string
   };
   export type PostUpdateManyMutationInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     title?: StringFieldUpdateOperationsInput | string
   };
   export type PostUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     ownerId?: IntFieldUpdateOperationsInput | number
     title?: StringFieldUpdateOperationsInput | string
   };
   export type VideoCreateInput = {
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     name: string
     duration: number
@@ -2606,16 +2606,16 @@ export namespace Prisma {
   };
   export type VideoUncheckedCreateInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     ownerId: number
     name: string
     duration: number
   };
   export type VideoUpdateInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
@@ -2623,8 +2623,8 @@ export namespace Prisma {
   };
   export type VideoUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     ownerId?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
@@ -2632,24 +2632,24 @@ export namespace Prisma {
   };
   export type VideoCreateManyInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     ownerId: number
     name: string
     duration: number
   };
   export type VideoUpdateManyMutationInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
   };
   export type VideoUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     ownerId?: IntFieldUpdateOperationsInput | number
     name?: StringFieldUpdateOperationsInput | string
@@ -2745,8 +2745,8 @@ export namespace Prisma {
   };
   export type ContentCountOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2757,16 +2757,16 @@ export namespace Prisma {
   };
   export type ContentMaxOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
   };
   export type ContentMinOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2819,8 +2819,8 @@ export namespace Prisma {
   };
   export type PostCountOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2832,8 +2832,8 @@ export namespace Prisma {
   };
   export type PostMaxOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2841,8 +2841,8 @@ export namespace Prisma {
   };
   export type PostMinOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2870,8 +2870,8 @@ export namespace Prisma {
   };
   export type VideoCountOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2885,8 +2885,8 @@ export namespace Prisma {
   };
   export type VideoMaxOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2895,8 +2895,8 @@ export namespace Prisma {
   };
   export type VideoMinOrderByAggregateInput = {
     id?: SortOrder
-    //h/ createdAt: SortOrder;
-    //h/ updatedAt: SortOrder;
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
     published?: SortOrder
     ownerId?: SortOrder
     contentType?: SortOrder
@@ -2959,7 +2959,7 @@ export namespace Prisma {
   };
   export type PostUpdateManyWithoutOwnerNestedInput = {
     create?: XOR<PostCreateWithoutOwnerInput, PostUncheckedCreateWithoutOwnerInput> | PostCreateWithoutOwnerInput[] | PostUncheckedCreateWithoutOwnerInput[]
-    connectOrCreate?: PostCreateOrConnectWithoutOwnerInput | PostCreateOrConnectWithoutOwnerInput[]
+    //h/ connectOrCreate: PostCreateOrConnectWithoutOwnerInput | PostCreateOrConnectWithoutOwnerInput[];
     upsert?: PostUpsertWithWhereUniqueWithoutOwnerInput | PostUpsertWithWhereUniqueWithoutOwnerInput[]
     createMany?: PostCreateManyOwnerInputEnvelope
     set?: PostWhereUniqueInput | PostWhereUniqueInput[]
@@ -3191,14 +3191,14 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   };
   export type ContentCreateWithoutOwnerInput = {
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
   };
   export type ContentUncheckedCreateWithoutOwnerInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
   };
   export type ContentCreateOrConnectWithoutOwnerInput = {
@@ -3209,15 +3209,15 @@ export namespace Prisma {
     data: ContentCreateManyOwnerInput | ContentCreateManyOwnerInput[]
   };
   export type PostCreateWithoutOwnerInput = {
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     title: string
   };
   export type PostUncheckedCreateWithoutOwnerInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     title: string
   };
@@ -3229,16 +3229,16 @@ export namespace Prisma {
     data: PostCreateManyOwnerInput | PostCreateManyOwnerInput[]
   };
   export type VideoCreateWithoutOwnerInput = {
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     name: string
     duration: number
   };
   export type VideoUncheckedCreateWithoutOwnerInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     name: string
     duration: number
@@ -3268,8 +3268,8 @@ export namespace Prisma {
     OR?: ContentScalarWhereInput[]
     NOT?: ContentScalarWhereInput | ContentScalarWhereInput[]
     id?: IntFilter<"Content"> | number
-    //h/ createdAt: DateTimeFilter<"Content"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Content"> | Date | string;
+    createdAt?: DateTimeFilter<"Content"> | Date | string
+    updatedAt?: DateTimeFilter<"Content"> | Date | string
     published?: BoolFilter<"Content"> | boolean
     ownerId?: IntFilter<"Content"> | number
     contentType?: EnumContentTypeDelegateFilter<"Content"> | $Enums.ContentTypeDelegate
@@ -3292,8 +3292,8 @@ export namespace Prisma {
     OR?: PostScalarWhereInput[]
     NOT?: PostScalarWhereInput | PostScalarWhereInput[]
     id?: IntFilter<"Post"> | number
-    //h/ createdAt: DateTimeFilter<"Post"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Post"> | Date | string;
+    createdAt?: DateTimeFilter<"Post"> | Date | string
+    updatedAt?: DateTimeFilter<"Post"> | Date | string
     published?: BoolFilter<"Post"> | boolean
     ownerId?: IntFilter<"Post"> | number
     contentType?: EnumContentTypeDelegateFilter<"Post"> | $Enums.ContentTypeDelegate
@@ -3317,8 +3317,8 @@ export namespace Prisma {
     OR?: VideoScalarWhereInput[]
     NOT?: VideoScalarWhereInput | VideoScalarWhereInput[]
     id?: IntFilter<"Video"> | number
-    //h/ createdAt: DateTimeFilter<"Video"> | Date | string;
-    //h/ updatedAt: DateTimeFilter<"Video"> | Date | string;
+    createdAt?: DateTimeFilter<"Video"> | Date | string
+    updatedAt?: DateTimeFilter<"Video"> | Date | string
     published?: BoolFilter<"Video"> | boolean
     ownerId?: IntFilter<"Video"> | number
     contentType?: EnumContentTypeDelegateFilter<"Video"> | $Enums.ContentTypeDelegate
@@ -3396,81 +3396,81 @@ export namespace Prisma {
   };
   export type ContentCreateManyOwnerInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
   };
   export type PostCreateManyOwnerInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     title: string
   };
   export type VideoCreateManyOwnerInput = {
     id?: number
-    //h/ createdAt: Date | string;
-    //h/ updatedAt: Date | string;
+    createdAt?: Date | string
+    updatedAt?: Date | string
     published?: boolean
     name: string
     duration: number
   };
   export type ContentUpdateWithoutOwnerInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
   };
   export type ContentUncheckedUpdateWithoutOwnerInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
   };
   export type ContentUncheckedUpdateManyWithoutOwnerInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
   };
   export type PostUpdateWithoutOwnerInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     title?: StringFieldUpdateOperationsInput | string
   };
   export type PostUncheckedUpdateWithoutOwnerInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     title?: StringFieldUpdateOperationsInput | string
   };
   export type PostUncheckedUpdateManyWithoutOwnerInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     title?: StringFieldUpdateOperationsInput | string
   };
   export type VideoUpdateWithoutOwnerInput = {
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
   };
   export type VideoUncheckedUpdateWithoutOwnerInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
   };
   export type VideoUncheckedUpdateManyWithoutOwnerInput = {
     id?: IntFieldUpdateOperationsInput | number
-    //h/ createdAt: DateTimeFieldUpdateOperationsInput | Date | string;
-    //h/ updatedAt: DateTimeFieldUpdateOperationsInput | Date | string;
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     published?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number

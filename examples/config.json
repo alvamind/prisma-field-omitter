@@ -8,9 +8,9 @@
   "hide": [
     {
       "field": [
-        "*At"
+        "connectOrCreate"
       ],
-      "target": "all",
+      "target": "PostUpdate*OwnerNestedInput",
       "on": "both"
     }
   ]
