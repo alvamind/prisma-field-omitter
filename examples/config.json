@@ -1,16 +1,16 @@
 {
-  "originFile": "./examples/index.d.ts",
+  "originFile": "./examples/big-index.d.ts",
   "outputDir": "./examples/output",
   "deleteOriginFile": false,
-  "action": "comment",
+  "action": "delete",
   "generateOmitTypes": true,
   "generatedOmitTypesOutputPath": "./examples/output/omit-types.ts",
   "hide": [
     {
       "field": [
-        "connectOrCreate"
+        "*Id"
       ],
-      "target": "PostUpdate*OwnerNestedInput",
+      "target": "all",
       "on": "both"
     }
   ]

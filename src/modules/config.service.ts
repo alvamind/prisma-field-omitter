@@ -1,11 +1,11 @@
-import Alvamind, { AlvamindInstance } from 'alvamind';
+import Alvamind from 'alvamind';
 import { mkdirSync } from 'fs';
 import { resolve } from 'path';
 import type { Config } from '../types';
 import { validationService } from './validation.service';
 
 // Added explicit type annotation to satisfy TS2742
-export const configService: AlvamindInstance = Alvamind({ name: 'config.service' })
+export const configService = Alvamind({ name: 'config.service' })
   .use(validationService)
   .decorate('configService', {
     async readConfig(configPath: string): Promise<Config> {

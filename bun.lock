@@ -4,7 +4,7 @@
     "": {
       "name": "prisma-field-omitter",
       "dependencies": {
-        "alvamind": "^1.0.12",
+        "alvamind": "^1.0.13",
         "alvamind-tools": "^1.0.23",
         "bun": "^1.2.2",
         "ts-morph": "^25.0.1",
@@ -60,7 +60,7 @@
 
     "@types/ws": ["@types/ws@8.5.14", "", { "dependencies": { "@types/node": "*" } }, "sha512-bd/YFLW+URhBzMXurx7lWByOu+xzU9+kb3RboOteXYDfW+tr+JZa99OyNmPINEGB/ahzKrEuc8rcv4gnpJmxTw=="],
 
-    "alvamind": ["alvamind@1.0.12", "", { "dependencies": { "alvamind-tools": "^1.0.23" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-sqXiRLpyHK7GHCae0fojtwgsUzJl6mVPJHZlyn2Fj4eJSAxlI7LkX1GncdeSRxr14nzwRsXcp39Ihy7SZGc5Xw=="],
+    "alvamind": ["alvamind@1.0.13", "", { "dependencies": { "alvamind-tools": "^1.0.23" }, "peerDependencies": { "typescript": "^5.0.0" } }, "sha512-0/MKenrbuYGVeKu7Ja0TIZ0Wdjy3MSz4W+8KlMFYwunuBYBjwWyAXKvsODdqhSXQFO2OflIqiBWJZxDkaIcWUg=="],
 
     "alvamind-tools": ["alvamind-tools@1.0.23", "", { "dependencies": { "@types/glob": "^8.1.0", "chalk": "4.1.2", "glob": "^8.1.0" }, "bin": { "alvamind": "dist/cli.js", "generate-source": "dist/tools/generate-source.js", "commit": "dist/tools/commit.js", "clean": "dist/tools/clean.js", "split-code": "dist/tools/split-files.js", "publish-npm": "dist/tools/npm-publish.js", "add-json-script": "dist/add-json-script.js" } }, "sha512-UPgDBG2yKOOpiTGHVTkEZwxB5Dr9DuIe9vMC/6Bf7euVU+o5TxWanclUzV6jQtG09a1qVWzD4k9RijfANMqEFQ=="],
 
